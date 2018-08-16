@@ -18,10 +18,10 @@ package co.cask.cdap.api.metrics;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -32,19 +32,19 @@ public class MetricDeleteQuery {
   private final long startTs;
   private final long endTs;
   private final Collection<String> metricNames;
-  private final Map<String, String> sliceByTagValues;
+  private final LinkedHashMap<String, String> sliceByTagValues;
 
   public MetricDeleteQuery(long startTs, long endTs, Collection<String> metricNames,
-                           Map<String, String> sliceByTagValues) {
+                           LinkedHashMap<String, String> sliceByTagValues) {
     this.startTs = startTs;
     this.endTs = endTs;
     this.metricNames = metricNames;
-    this.sliceByTagValues = Maps.newHashMap(sliceByTagValues);
+    this.sliceByTagValues = new LinkedHashMap<>(sliceByTagValues);
   }
 
   public MetricDeleteQuery(long startTs, long endTs,
-                           Map<String, String> sliceByTagValues) {
-    this(startTs, endTs, ImmutableList.<String>of(), sliceByTagValues);
+                           LinkedHashMap<String, String> sliceByTagValues) {
+    this(startTs, endTs, Collections.emptyList(), sliceByTagValues);
   }
 
   public long getStartTs() {
@@ -59,7 +59,7 @@ public class MetricDeleteQuery {
     return metricNames;
   }
 
-  public Map<String, String> getSliceByTags() {
+  public LinkedHashMap<String, String> getSliceByTags() {
     return sliceByTagValues;
   }
 

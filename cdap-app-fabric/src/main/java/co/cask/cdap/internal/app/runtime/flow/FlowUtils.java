@@ -30,7 +30,6 @@ import co.cask.cdap.app.program.Program;
 import co.cask.cdap.app.queue.QueueSpecification;
 import co.cask.cdap.app.queue.QueueSpecificationGenerator;
 import co.cask.cdap.common.conf.Constants;
-import co.cask.cdap.common.id.Id;
 import co.cask.cdap.common.queue.QueueName;
 import co.cask.cdap.data2.queue.ConsumerGroupConfig;
 import co.cask.cdap.data2.queue.DequeueStrategy;
@@ -79,6 +78,7 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -382,7 +382,7 @@ public final class FlowUtils {
     Preconditions.checkArgument(namespace != null || appId == null, "Namespace may only be null if AppId is null");
     Preconditions.checkArgument(appId != null || flowId == null, "AppId may only be null if FlowId is null");
     Collection<String> names = Collections.singleton("system.queue.pending");
-    Map<String, String> tags = Maps.newHashMap();
+    LinkedHashMap<String, String> tags = new LinkedHashMap<>();
     if (namespace != null) {
       tags.put(Constants.Metrics.Tag.NAMESPACE, namespace);
       if (appId != null) {

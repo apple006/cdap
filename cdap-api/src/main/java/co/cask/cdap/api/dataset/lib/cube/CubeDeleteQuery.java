@@ -21,7 +21,7 @@ import co.cask.cdap.api.annotation.Beta;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -41,7 +41,8 @@ public class CubeDeleteQuery {
    * @param startTs start time of the data selection, in seconds since epoch
    * @param endTs end time of the data selection, in seconds since epoch
    * @param resolution resolution of the aggregations to delete from
-   * @param dimensionValues dimension name, dimension value pairs that define the data selection
+   * @param dimensionValues dimension name, dimension value pairs that define the data selection, note that this should
+   *                        match the prefix of the aggregation group of the metrics.
    * @param measureNames name of the measures to delete, {@code null} means delete all
    */
   public CubeDeleteQuery(long startTs, long endTs, int resolution,
@@ -50,7 +51,7 @@ public class CubeDeleteQuery {
     this.endTs = endTs;
     this.resolution = resolution;
     this.measureNames = Collections.unmodifiableCollection(new ArrayList<>(measureNames));
-    this.dimensionValues = Collections.unmodifiableMap(new HashMap<>(dimensionValues));
+    this.dimensionValues = Collections.unmodifiableMap(new LinkedHashMap<>(dimensionValues));
   }
 
 
@@ -59,11 +60,12 @@ public class CubeDeleteQuery {
    * @param startTs start time of the data selection, in seconds since epoch
    * @param endTs end time of the data selection, in seconds since epoch
    * @param resolution resolution of the aggregations to delete from
-   * @param dimensionValues dimension name, dimension value pairs that define the data selection
+   * @param dimensionValues dimension name, dimension value pairs that define the data selection, note that this should
+   *                        match the prefix of the aggregation group of the metrics.
    * @param measureName name of the measure to delete, {@code null} means delete all
    */
   public CubeDeleteQuery(long startTs, long endTs, int resolution,
-                         Map<String, String> dimensionValues, @Nullable String measureName) {
+                         LinkedHashMap<String, String> dimensionValues, @Nullable String measureName) {
 
     this(startTs, endTs, resolution, dimensionValues,
          measureName == null ? Collections.<String>emptyList() : Collections.singletonList(measureName));
@@ -74,10 +76,11 @@ public class CubeDeleteQuery {
    * @param startTs start time of the data selection, in seconds since epoch
    * @param endTs end time of the data selection, in seconds since epoch
    * @param resolution resolution of the aggregations to delete from
-   * @param dimensionValues dimension name, dimension value pairs that define the data selection
+   * @param dimensionValues dimension name, dimension value pairs that define the data selection, note that this should
+   *                        match the prefix of the aggregation group of the metrics.
    */
   public CubeDeleteQuery(long startTs, long endTs, int resolution,
-                         Map<String, String> dimensionValues) {
+                         LinkedHashMap<String, String> dimensionValues) {
     this(startTs, endTs, resolution, dimensionValues, (String) null);
   }
 

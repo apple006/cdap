@@ -35,14 +35,13 @@ import co.cask.cdap.proto.id.ProgramId;
 import co.cask.cdap.scheduler.Scheduler;
 import co.cask.cdap.security.impersonation.Impersonator;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Deleted program handler stage. Figures out which programs are deleted and handles callback.
@@ -113,11 +112,11 @@ public class DeletedProgramHandlerStage extends AbstractStage<ApplicationDeploya
     LOG.debug("Deleting metrics for application {}", applicationId);
     for (String flow : flows) {
       long endTs = System.currentTimeMillis() / 1000;
-      Map<String, String> tags = Maps.newHashMap();
+      LinkedHashMap<String, String> tags = new LinkedHashMap<>();
       tags.put(Constants.Metrics.Tag.NAMESPACE, applicationId.getNamespace());
       tags.put(Constants.Metrics.Tag.APP, applicationId.getApplication());
       tags.put(Constants.Metrics.Tag.FLOW, flow);
-      MetricDeleteQuery deleteQuery = new MetricDeleteQuery(0, endTs, Collections.<String>emptyList(), tags);
+      MetricDeleteQuery deleteQuery = new MetricDeleteQuery(0, endTs, Collections.emptyList(), tags);
       metricStore.delete(deleteQuery);
     }
   }

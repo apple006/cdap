@@ -90,7 +90,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicates;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -103,6 +102,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -618,7 +618,7 @@ public class ApplicationLifecycleService extends AbstractIdleService {
   private void deleteMetrics(ApplicationId applicationId) throws Exception {
     ApplicationSpecification spec = this.store.getApplication(applicationId);
     long endTs = System.currentTimeMillis() / 1000;
-    Map<String, String> tags = Maps.newHashMap();
+    LinkedHashMap<String, String> tags = new LinkedHashMap<>();
     tags.put(Constants.Metrics.Tag.NAMESPACE, applicationId.getNamespace());
     // add or replace application name in the tagMap
     tags.put(Constants.Metrics.Tag.APP, spec.getName());
