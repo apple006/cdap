@@ -26,9 +26,37 @@ import T from 'i18n-react';
 require('./ConfirmationModal.scss');
 
 export default class ConfirmationModal extends Component {
-  constructor(props) {
-    super(props);
-  }
+
+  static propTypes = {
+    cancelButtonText: PropTypes.string,
+    cancelFn: PropTypes.func,
+    confirmationElem: PropTypes.element,
+    confirmButtonText: PropTypes.string,
+    confirmationText: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.arrayOf(PropTypes.oneOfType([
+        PropTypes.string,
+        PropTypes.node
+      ]))
+    ]),
+    confirmFn: PropTypes.func,
+    headerTitle: PropTypes.string,
+    isOpen: PropTypes.bool,
+    toggleModal: PropTypes.func,
+    isLoading: PropTypes.bool,
+    errorMessage: PropTypes.string,
+    extendedMessage: PropTypes.string,
+    disableAction: PropTypes.bool,
+    closeable: PropTypes.bool,
+    keyboard: PropTypes.bool
+  };
+
+  static defaultProps = {
+    confirmButtonText: T.translate('features.ConfirmationModal.confirmDefaultText'),
+    cancelButtonText: T.translate('features.ConfirmationModal.cancelDefaultText'),
+    closeable: false,
+    keyboard: true
+  };
 
   componentWillMount() {
     Mousetrap.bind('enter', this.props.confirmFn);
@@ -111,9 +139,21 @@ export default class ConfirmationModal extends Component {
         className="confirmation-modal"
         backdrop='static'
         zIndex={1061}
+        keyboard={this.props.keyboard}
       >
         <ModalHeader>
           {this.props.headerTitle}
+          {
+            this.props.closeable ?
+              <div
+                className="close-section float-xs-right"
+                onClick={this.props.cancelFn}
+              >
+                <span className="fa fa-times" />
+              </div>
+            :
+              null
+          }
         </ModalHeader>
 
         {this.renderModalBody()}
@@ -122,30 +162,3 @@ export default class ConfirmationModal extends Component {
     );
   }
 }
-
-ConfirmationModal.defaultProps = {
-  confirmButtonText: T.translate('features.ConfirmationModal.confirmDefaultText'),
-  cancelButtonText:  T.translate('features.ConfirmationModal.cancelDefaultText')
-};
-
-ConfirmationModal.propTypes = {
-  cancelButtonText: PropTypes.string,
-  cancelFn: PropTypes.func,
-  confirmationElem: PropTypes.element,
-  confirmButtonText: PropTypes.string,
-  confirmationText: PropTypes.oneOfType([
-    PropTypes.string,
-    PropTypes.arrayOf(PropTypes.oneOfType([
-      PropTypes.string,
-      PropTypes.node
-    ]))
-  ]),
-  confirmFn: PropTypes.func,
-  headerTitle: PropTypes.string,
-  isOpen: PropTypes.bool,
-  toggleModal: PropTypes.func,
-  isLoading: PropTypes.bool,
-  errorMessage: PropTypes.string,
-  extendedMessage: PropTypes.string,
-  disableAction: PropTypes.bool
-};
