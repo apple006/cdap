@@ -234,7 +234,7 @@ export default class AddToHydratorModal extends Component {
         isOpen={true}
         toggle={this.props.toggle}
         size="lg"
-        className="add-to-pipeline-dataprep-modal"
+        className="add-to-pipeline-dataprep-modal cdap-modal"
       >
         <ModalHeader>
           <span>
@@ -250,17 +250,13 @@ export default class AddToHydratorModal extends Component {
         </ModalHeader>
         <ModalBody>
           {showContent ? content : this.renderInvalidFieldError()}
-
         </ModalBody>
         {
-          this.state.error && showContent ?
-            <ModalFooter className="dataset-copy-error-container">
-              <CardActionFeedback
-                type='DANGER'
-                message={T.translate(`${PREFIX}.addToPipelineModal.errorTitle`)}
-                extendedMessage={this.state.error}
-              />
-            </ModalFooter>
+          this.state.error ?
+            <CardActionFeedback
+              type='DANGER'
+              message={T.translate(`${PREFIX}.addToPipelineModal.errorTitle`)}
+            />
           :
             null
         }
