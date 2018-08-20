@@ -31,6 +31,7 @@ import T from 'i18n-react';
 import {directiveRequestBodyCreator} from 'components/DataPrep/helper';
 import {execute} from 'components/DataPrep/store/DataPrepActionCreator';
 import DataPrepActions from 'components/DataPrep/store/DataPrepActions';
+import CardActionFeedback from 'components/CardActionFeedback';
 
 var SchemaEditor = Loadable({
   loader: () => import(/* webpackChunkName: "SchemaEditor" */ 'components/SchemaEditor'),
@@ -177,12 +178,6 @@ export default class SchemaModal extends Component {
     } else if (this.state.error) {
       content = (
         <div>
-          <div className="text-danger">
-            <span className="fa fa-exclamation-triangle"></span>
-            <span>
-              {typeof this.state.error === 'object' ? this.state.error.message : this.state.error}
-            </span>
-          </div>
           <div className="remedy-message">
               {
                 objectQuery(this.state, 'error', 'remedies') ? this.state.error.remedies : null
@@ -214,7 +209,7 @@ export default class SchemaModal extends Component {
         toggle={this.props.toggle}
         size="lg"
         zIndex="1061"
-        className="dataprep-schema-modal"
+        className="dataprep-schema-modal cdap-modal"
       >
         <ModalHeader>
           <span>
@@ -240,6 +235,16 @@ export default class SchemaModal extends Component {
         <ModalBody>
           {content}
         </ModalBody>
+        {
+          this.state.error ?
+            <CardActionFeedback
+              type="DANGER"
+              message={typeof this.state.error === 'object' ? this.state.error.message : this.state.error}
+              extendedMessage={this.props.extendedMessage}
+            />
+          :
+            null
+        }
       </Modal>
     );
   }
