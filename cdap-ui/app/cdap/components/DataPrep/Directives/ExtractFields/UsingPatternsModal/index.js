@@ -28,6 +28,7 @@ import Mousetrap from 'mousetrap';
 import DataPrepStore from 'components/DataPrep/store';
 import DataPrepActions from 'components/DataPrep/store/DataPrepActions';
 import {UncontrolledDropdown} from 'components/UncontrolledComponents';
+import CardActionFeedback from 'components/CardActionFeedback';
 
 require('./UsingPatternsModal.scss');
 
@@ -329,6 +330,24 @@ export default class UsingPatternsModal extends Component {
     }
   }
 
+  renderFooterButton = () => {
+    return [
+      <button
+        className="btn btn-primary"
+        onClick={this.applyDirective}
+        disabled={isNil(this.state.pattern) ? 'disabled' : null}
+      >
+        {T.translate('features.DataPrep.Directives.ExtractFields.extractBtnLabel')}
+      </button>,
+      <button
+        className="btn btn-secondary"
+        onClick={this.props.onClose}
+      >
+        {T.translate('features.DataPrep.Directives.cancel')}
+      </button>
+    ];
+  }
+
   render() {
     let showHideLink = null;
     if (this.state.showEditPatternLabel) {
@@ -353,7 +372,7 @@ export default class UsingPatternsModal extends Component {
         size="md"
         backdrop="static"
         zIndex="1061"
-        className="dataprep-parse-modal using-patterns-modal"
+        className="dataprep-parse-modal using-patterns-modal cdap-modal"
       >
         <ModalHeader>
 
@@ -423,24 +442,17 @@ export default class UsingPatternsModal extends Component {
             }
           </div>
         </ModalBody>
-        <ModalFooter>
-          <span className="text-warning">
-            {this.state.error}
-          </span>
-          <button
-            className="btn btn-primary"
-            onClick={this.applyDirective}
-            disabled={isNil(this.state.pattern) ? 'disabled' : null}
-          >
-            {T.translate('features.DataPrep.Directives.ExtractFields.extractBtnLabel')}
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={this.props.onClose}
-          >
-            {T.translate('features.DataPrep.Directives.cancel')}
-          </button>
-        </ModalFooter>
+        {
+          this.state.error ?
+            <CardActionFeedback
+              type="DANGER"
+              message={this.state.error}
+            />
+          :
+            <ModalFooter>
+              {this.renderFooterButton()}
+            </ModalFooter>
+        }
       </Modal>
     );
   }
