@@ -21,6 +21,7 @@ require('./BtnWithLoading.scss');
 
 export default function BtnWithLoading({
   className,
+  darker = false,
   label,
   loading,
   disabled,
@@ -28,7 +29,7 @@ export default function BtnWithLoading({
 }) {
   return (
     <button
-      className={`btn btn-with-loading ${className}`}
+      className={`btn btn-with-loading ${className} ${darker ? 'darker-loading-bars' : ''}`}
       onClick={onClick}
       disabled={disabled || loading}
     >
