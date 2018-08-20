@@ -321,7 +321,7 @@ public final class SchemaTypeAdapter extends TypeAdapter<Schema> {
    * @throws IOException When fails to encode the schema into json.
    */
   private JsonWriter write(JsonWriter writer, Schema schema, Set<String> knownRecords) throws IOException {
-    if (schema.isLogicalType()) {
+    if (schema.getLogicalType() != null) {
       writer.beginObject().name(LOGICAL_TYPE).value(schema.getLogicalType().name().toLowerCase());
       writer.name(TYPE).value(schema.getType().name().toLowerCase());
       writer.endObject();

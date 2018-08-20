@@ -82,7 +82,7 @@ public final class Schema implements Serializable {
   }
 
   /**
-   * Logical types to represent logical avro types. Schema of logical types is schema of primitive types
+   * Logical type to represent date and time using {@link Schema}. Schema of logical types is schema of primitive types
    * with extra attribute `logicalType`.
    *
    * For example, the json schema for logicaltype will be as below:
@@ -97,13 +97,6 @@ public final class Schema implements Serializable {
     TIMESTAMP_MICROS, // underlying primitive type is LONG
     TIME_MILLIS, // underlying primitive type is INT
     TIME_MICROS // underlying primitive type is LONG
-  }
-
-  /**
-   * @return true if this schema represents a logical type.
-   */
-  public boolean isLogicalType() {
-    return this.logicalType != null;
   }
 
   /**
@@ -257,7 +250,7 @@ public final class Schema implements Serializable {
         type = Type.LONG;
         break;
       default:
-        throw new IllegalArgumentException("LogicalType " + logicalType + " is not a supported logical type.");
+        throw new IllegalStateException("LogicalType " + logicalType + " is not a supported logical type.");
     }
 
     return new Schema(type, logicalType, null, null, null, null, null, null, null);
@@ -485,7 +478,7 @@ public final class Schema implements Serializable {
   }
 
   /**
-   * @return The {@link LogicalType} that this schema represents.
+   * @return the {@link LogicalType} that this schema represents.
    */
   @Nullable
   public LogicalType getLogicalType() {
@@ -848,7 +841,7 @@ public final class Schema implements Serializable {
   private String buildString() {
     // Return type only if this type does not represent logical type, otherwise use jsonwriter to convert logical type
     // to correct schema.
-    if (type.isSimpleType() && !isLogicalType()) {
+    if (type.isSimpleType() && logicalType == null) {
       return '"' + type.name().toLowerCase() + '"';
     }
 

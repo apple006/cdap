@@ -59,12 +59,12 @@ public class StructuredRecordBuilderTest {
     dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     Schema schema = Schema.recordOf("x1",
                                     Schema.Field.of("ts", Schema.of(Schema.Type.LONG)),
-                                    Schema.Field.of("date1", Schema.of(Schema.LogicalType.DATE)),
+                                    Schema.Field.of("date1", Schema.of(Schema.Type.STRING)),
                                     Schema.Field.of("date2", Schema.of(Schema.Type.STRING)));
 
     StructuredRecord expected = StructuredRecord.builder(schema)
-      .set("ts", 0)
-      .set("date1", 0)
+      .set("ts", 0L)
+      .set("date1", "1970-01-01T00:00:00 UTC")
       .set("date2", "1970-01-01")
       .build();
 
@@ -129,24 +129,87 @@ public class StructuredRecordBuilderTest {
                                     Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
                                     Schema.Field.of("timestamp", Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
 
-    ZonedDateTime expected = ZonedDateTime.now();
+    ZonedDateTime expectedMillis = ZonedDateTime.of(2018, 11, 11, 11, 11, 11, 123 * 1000 * 1000,
+                                                    ZoneId.systemDefault());
     StructuredRecord record = StructuredRecord.builder(schema)
       .set("id", 1)
       .set("name", "test")
-      .setTimestamp("timestamp", expected).build();
+      .setTimestamp("timestamp", expectedMillis).build();
 
     ZonedDateTime actual = record.getTimestamp("timestamp", ZoneId.systemDefault());
-    Assert.assertEquals(expected, actual);
+    Assert.assertEquals(expectedMillis, actual);
 
+    ZonedDateTime expectedMicros = ZonedDateTime.of(2018, 11, 11, 11, 11, 11, 123456 * 1000, ZoneId.systemDefault());
     schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
                              Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
                              Schema.Field.of("timestamp", Schema.of(Schema.LogicalType.TIMESTAMP_MICROS)));
     record = StructuredRecord.builder(schema)
       .set("id", 1)
       .set("name", "test")
-      .setTimestamp("timestamp", expected).build();
-
+      .setTimestamp("timestamp", expectedMicros).build();
     actual = record.getTimestamp("timestamp");
-    Assert.assertEquals(expected, actual);
+    Assert.assertEquals(expectedMicros, actual);
+  }
+
+  @Test
+  public void testNullLogicalType() {
+    Schema schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
+                                    Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
+                                    Schema.Field.of("date", Schema.nullableOf(Schema.of(Schema.LogicalType.DATE))));
+
+    StructuredRecord record = StructuredRecord.builder(schema)
+      .set("id", 1)
+      .set("name", "test")
+      .setDate("date", null).build();
+
+    LocalDate actual = record.getDate("date");
+
+    Assert.assertNull(actual);
+  }
+
+  @Test
+  public void testUnionSchemaType() {
+    Schema schema = Schema.recordOf("x", Schema.Field.of("x", Schema.unionOf(
+      Schema.of(Schema.Type.NULL),
+      Schema.of(Schema.Type.INT),
+      Schema.of(Schema.Type.LONG),
+      Schema.of(Schema.LogicalType.DATE),
+      Schema.nullableOf(Schema.of(Schema.LogicalType.TIME_MILLIS)))));
+
+    LocalDate date = LocalDate.of(2018, 11, 11);
+    LocalTime time = LocalTime.of(21, 1, 1);
+    Assert.assertEquals(date, StructuredRecord.builder(schema).setDate("x", date).build().getDate("x"));
+    Assert.assertEquals(time, StructuredRecord.builder(schema).setTime("x", time).build().getTime("x"));
+    Assert.assertNull(StructuredRecord.builder(schema).setTime("x", null).build().getTime("x"));
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testInvalidDateLogicalType() {
+    Schema schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
+                                    Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
+                                    Schema.Field.of("date", Schema.of(Schema.LogicalType.DATE)));
+
+    LocalTime expected = LocalTime.now();
+    StructuredRecord.builder(schema).set("id", 1).set("name", "test").setTime("date", expected).build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testInvalidTimeLogicalType() {
+    Schema schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
+                                    Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
+                                    Schema.Field.of("time", Schema.of(Schema.LogicalType.TIME_MILLIS)));
+
+    LocalDate expected = LocalDate.now();
+    StructuredRecord.builder(schema).set("id", 1).set("name", "test").setDate("time", expected).build();
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void testInvalidTimestampLogicalType() {
+    Schema schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
+                                    Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
+                                    Schema.Field.of("timestamp", Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
+
+    LocalDate expected = LocalDate.now();
+    StructuredRecord.builder(schema).set("id", 1).set("name", "test").setDate("timestamp", expected).build();
   }
 }

@@ -98,7 +98,7 @@
     <apache.jdbm1.version>2.0.0-M2</apache.jdbm1.version>
     <asm.version>5.0.3</asm.version>
     <async.http.version>1.7.18</async.http.version>
-    <avro.version>1.8.2</avro.version>
+    <avro.version>1.6.2</avro.version>
     <cask.common.cli.version>0.8.0</cask.common.cli.version>
     <cask.common.version>0.11.0-SNAPSHOT</cask.common.version>
     <cdap.client.version>1.2.0</cdap.client.version>

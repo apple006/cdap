@@ -477,6 +477,25 @@ public class SchemaTest {
     Assert.assertEquals(timeMillisType, Schema.parseJson(timeMillisType.toString()));
     Assert.assertEquals(timestampMicrosType, Schema.parseJson(timestampMicrosType.toString()));
     Assert.assertEquals(timestampMillisType, Schema.parseJson(timestampMillisType.toString()));
+
+    Schema complexSchema = Schema.recordOf(
+      "union",
+      Schema.Field.of("a", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                                          Schema.arrayOf(Schema.of(Schema.Type.STRING)))),
+      Schema.Field.of("b", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                                          Schema.arrayOf(Schema.of(Schema.LogicalType.DATE)))),
+      Schema.Field.of("c", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                                          Schema.enumWith("something"))),
+      Schema.Field.of("d", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                                          Schema.mapOf(Schema.of(Schema.Type.STRING), Schema.of(Schema.Type.STRING)))),
+      Schema.Field.of("e", Schema.unionOf(Schema.of(Schema.Type.NULL),
+                                          Schema.mapOf(Schema.of(Schema.LogicalType.DATE),
+                                                       Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)))),
+      Schema.Field.of("f", Schema.nullableOf(Schema.of(Schema.Type.STRING))),
+      Schema.Field.of("g", Schema.nullableOf(Schema.of(Schema.LogicalType.DATE))),
+      Schema.Field.of("h", Schema.nullableOf(Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS))));
+
+    Assert.assertEquals(complexSchema, Schema.parseJson(complexSchema.toString()));
   }
 
 
