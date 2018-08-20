@@ -382,7 +382,7 @@ public final class FlowUtils {
     Preconditions.checkArgument(namespace != null || appId == null, "Namespace may only be null if AppId is null");
     Preconditions.checkArgument(appId != null || flowId == null, "AppId may only be null if FlowId is null");
     Collection<String> names = Collections.singleton("system.queue.pending");
-    LinkedHashMap<String, String> tags = new LinkedHashMap<>();
+    Map<String, String> tags = new LinkedHashMap<>();
     if (namespace != null) {
       tags.put(Constants.Metrics.Tag.NAMESPACE, namespace);
       if (appId != null) {

@@ -481,7 +481,7 @@ public class MetricsHandlerTestRun extends MetricsSuiteTestBase {
         "&metric=system.reads&interpolate=linear&start=" + start + "&end="
         + end, 4, 1000);
 
-    LinkedHashMap<String, String> deleteTags = new LinkedHashMap<>();
+    Map<String, String> deleteTags = new LinkedHashMap<>();
     deleteTags.put(Constants.Metrics.Tag.NAMESPACE, "interspace");
     deleteTags.put(Constants.Metrics.Tag.APP, "WordCount1");
     deleteTags.put(Constants.Metrics.Tag.FLOW, "WordCounter");
@@ -557,7 +557,7 @@ public class MetricsHandlerTestRun extends MetricsSuiteTestBase {
         "&metric=system.reads&resolution=auto&start=" + (start - 1) + "&end="
         + (start + 36000), 3, 6);
 
-    LinkedHashMap<String, String> deleteTags = new LinkedHashMap<>();
+    Map<String, String> deleteTags = new LinkedHashMap<>();
     deleteTags.put(Constants.Metrics.Tag.NAMESPACE, "resolutions");
     deleteTags.put(Constants.Metrics.Tag.APP, "WordCount1");
     deleteTags.put(Constants.Metrics.Tag.FLOW, "WordCounter");

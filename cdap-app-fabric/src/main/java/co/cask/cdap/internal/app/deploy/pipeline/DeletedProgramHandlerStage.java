@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Deleted program handler stage. Figures out which programs are deleted and handles callback.
@@ -112,7 +113,7 @@ public class DeletedProgramHandlerStage extends AbstractStage<ApplicationDeploya
     LOG.debug("Deleting metrics for application {}", applicationId);
     for (String flow : flows) {
       long endTs = System.currentTimeMillis() / 1000;
-      LinkedHashMap<String, String> tags = new LinkedHashMap<>();
+      Map<String, String> tags = new LinkedHashMap<>();
       tags.put(Constants.Metrics.Tag.NAMESPACE, applicationId.getNamespace());
       tags.put(Constants.Metrics.Tag.APP, applicationId.getApplication());
       tags.put(Constants.Metrics.Tag.FLOW, flow);

@@ -618,7 +618,7 @@ public class ApplicationLifecycleService extends AbstractIdleService {
   private void deleteMetrics(ApplicationId applicationId) throws Exception {
     ApplicationSpecification spec = this.store.getApplication(applicationId);
     long endTs = System.currentTimeMillis() / 1000;
-    LinkedHashMap<String, String> tags = new LinkedHashMap<>();
+    Map<String, String> tags = new LinkedHashMap<>();
     tags.put(Constants.Metrics.Tag.NAMESPACE, applicationId.getNamespace());
     // add or replace application name in the tagMap
     tags.put(Constants.Metrics.Tag.APP, spec.getName());

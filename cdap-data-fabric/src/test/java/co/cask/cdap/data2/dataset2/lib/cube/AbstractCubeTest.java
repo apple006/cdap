@@ -140,7 +140,7 @@ public abstract class AbstractCubeTest {
 
     // delete cube data for "metric1" for dim->1,dim2->1,dim3->1 for timestamp 1 - 8 and
     // check data for other timestamp is available
-    LinkedHashMap<String, String> deleteTags = new LinkedHashMap<>();
+    Map<String, String> deleteTags = new LinkedHashMap<>();
     deleteTags.put("dim1", "1");
     deleteTags.put("dim2", "1");
     deleteTags.put("dim3", "1");
@@ -274,7 +274,7 @@ public abstract class AbstractCubeTest {
                        new TimeSeries("metric1", new HashMap<String, String>(), expectedTimeValues)),
                      new Interpolators.Step());
 
-    LinkedHashMap<String, String> deleteTags = new LinkedHashMap<>();
+    Map<String, String> deleteTags = new LinkedHashMap<>();
     deleteTags.put("dim1", "1");
     deleteTags.put("dim2", "1");
     deleteTags.put("dim3", "1");
@@ -341,12 +341,12 @@ public abstract class AbstractCubeTest {
     Cube cube = getCube("testDeletion", new int[] {resolution},
                         ImmutableMap.of("agg1", agg1, "agg2", agg2));
 
-    LinkedHashMap<String, String> agg1Dims = new LinkedHashMap<>();
+    Map<String, String> agg1Dims = new LinkedHashMap<>();
     agg1Dims.put("dim1", "1");
     agg1Dims.put("dim2", "1");
     agg1Dims.put("dim3", "1");
 
-    LinkedHashMap<String, String> agg2Dims = new LinkedHashMap<>();
+    Map<String, String> agg2Dims = new LinkedHashMap<>();
     agg2Dims.put("dim1", "1");
     agg2Dims.put("dim3", "1");
 

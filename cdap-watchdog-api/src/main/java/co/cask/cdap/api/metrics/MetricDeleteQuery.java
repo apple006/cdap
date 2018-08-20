@@ -19,31 +19,40 @@ package co.cask.cdap.api.metrics;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Query that specifies parameters to delete entries from {@link MetricStore}.
  */
 public class MetricDeleteQuery {
-
   private final long startTs;
   private final long endTs;
   private final Collection<String> metricNames;
-  private final LinkedHashMap<String, String> sliceByTagValues;
+  private final Map<String, String> sliceByTagValues;
+  private final Predicate<List<String>> tagPredicate;
 
   public MetricDeleteQuery(long startTs, long endTs, Collection<String> metricNames,
-                           LinkedHashMap<String, String> sliceByTagValues) {
+                           Map<String, String> sliceByTagValues, Predicate<List<String>> tagPredicate) {
     this.startTs = startTs;
     this.endTs = endTs;
     this.metricNames = metricNames;
     this.sliceByTagValues = new LinkedHashMap<>(sliceByTagValues);
+    this.tagPredicate = tagPredicate;
   }
 
-  public MetricDeleteQuery(long startTs, long endTs,
-                           LinkedHashMap<String, String> sliceByTagValues) {
+  public MetricDeleteQuery(long startTs, long endTs, Collection<String> metricNames,
+                           Map<String, String> sliceByTagValues) {
+    this(startTs, endTs, metricNames, sliceByTagValues,
+         aggregates -> Collections.indexOfSubList(aggregates, new ArrayList<>(sliceByTagValues.keySet())) == 0);
+  }
+
+  public MetricDeleteQuery(long startTs, long endTs, Map<String, String> sliceByTagValues) {
     this(startTs, endTs, Collections.emptyList(), sliceByTagValues);
   }
 
@@ -59,8 +68,12 @@ public class MetricDeleteQuery {
     return metricNames;
   }
 
-  public LinkedHashMap<String, String> getSliceByTags() {
+  public Map<String, String> getSliceByTags() {
     return sliceByTagValues;
+  }
+
+  public Predicate<List<String>> getTagPredicate() {
+    return tagPredicate;
   }
 
   @Override
