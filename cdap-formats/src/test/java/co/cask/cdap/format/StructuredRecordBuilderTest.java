@@ -174,11 +174,16 @@ public class StructuredRecordBuilderTest {
       Schema.of(Schema.Type.INT),
       Schema.of(Schema.Type.LONG),
       Schema.of(Schema.LogicalType.DATE),
-      Schema.nullableOf(Schema.of(Schema.LogicalType.TIME_MILLIS)))));
+      Schema.nullableOf(Schema.of(Schema.LogicalType.TIME_MILLIS)),
+      Schema.unionOf(Schema.nullableOf(Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)),
+                     Schema.of(Schema.Type.STRING)))));
 
     LocalDate date = LocalDate.of(2018, 11, 11);
+    ZonedDateTime zonedDateTime = ZonedDateTime.of(2018, 11, 11, 11, 11, 11, 0, ZoneId.systemDefault());
     LocalTime time = LocalTime.of(21, 1, 1);
     Assert.assertEquals(date, StructuredRecord.builder(schema).setDate("x", date).build().getDate("x"));
+    StructuredRecord x = StructuredRecord.builder(schema).setTimestamp("x", zonedDateTime).build();
+    Assert.assertEquals(zonedDateTime, x.getTimestamp("x"));
     Assert.assertEquals(time, StructuredRecord.builder(schema).setTime("x", time).build().getTime("x"));
     Assert.assertNull(StructuredRecord.builder(schema).setTime("x", null).build().getTime("x"));
   }

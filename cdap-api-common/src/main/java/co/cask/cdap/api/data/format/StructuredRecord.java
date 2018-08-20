@@ -19,6 +19,7 @@ package co.cask.cdap.api.data.format;
 import co.cask.cdap.api.annotation.Beta;
 import co.cask.cdap.api.common.Bytes;
 import co.cask.cdap.api.data.schema.Schema;
+import co.cask.cdap.api.data.schema.Schema.LogicalType;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -28,14 +29,11 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
@@ -87,13 +85,13 @@ public class StructuredRecord implements Serializable {
    * @param fieldName date field to get.
    * @return value of the field as an object of {@link LocalDate}, returns null if given field has null value
    * @throws IllegalArgumentException if the field name is not present in schema or the field provided
-   *                                  is not of {@link Schema.LogicalType#DATE} type.
+   *                                  is not of {@link LogicalType#DATE} type.
    */
-  public LocalDate getDate(String fieldName) throws IllegalArgumentException {
-    validateAndGetLogicalType(fieldName, schema.getField(fieldName),
-                              new HashSet<>(Collections.singletonList(Schema.LogicalType.DATE.name())));
-    return this.fields.get(fieldName) == null ? null : LocalDate.ofEpochDay(((Integer) fields.get(fieldName))
-                                                                              .longValue());
+  @Nullable
+  public LocalDate getDate(String fieldName) {
+    validateAndGetLogicalType(fieldName, schema.getField(fieldName), EnumSet.of(LogicalType.DATE));
+    Object value = fields.get(fieldName);
+    return value == null ? null : LocalDate.ofEpochDay(((Integer) value).longValue());
   }
 
   /**
@@ -102,23 +100,24 @@ public class StructuredRecord implements Serializable {
    * @param fieldName time field to get.
    * @return value of the field as an object of {@link LocalTime}, returns null if given field has null value
    * @throws IllegalArgumentException if the field name is not present in schema or the field provided
-   *                                  is not of {@link Schema.LogicalType#TIME_MILLIS} or
-   *                                  {@link Schema.LogicalType#TIME_MICROS} type.
+   *                                  is not of {@link LogicalType#TIME_MILLIS} or
+   *                                  {@link LogicalType#TIME_MICROS} type.
    */
+  @Nullable
   public LocalTime getTime(String fieldName) {
-    Schema.LogicalType logicalType =  validateAndGetLogicalType(fieldName, schema.getField(fieldName),
-                                                                new HashSet<>(
-      Arrays.asList(Schema.LogicalType.TIME_MILLIS.name(), Schema.LogicalType.TIME_MICROS.name())));
-
-    if (fields.get(fieldName) == null) {
+    LogicalType logicalType =  validateAndGetLogicalType(fieldName, schema.getField(fieldName),
+                                                                EnumSet.of(LogicalType.TIME_MILLIS,
+                                                                           LogicalType.TIME_MICROS));
+    Object value = fields.get(fieldName);
+    if (value == null) {
       return null;
     }
 
-    if (logicalType == Schema.LogicalType.TIME_MILLIS) {
-      return LocalTime.ofNanoOfDay(TimeUnit.MILLISECONDS.toNanos(((Integer) fields.get(fieldName))));
+    if (logicalType == LogicalType.TIME_MILLIS) {
+      return LocalTime.ofNanoOfDay(TimeUnit.MILLISECONDS.toNanos(((Integer) value)));
     }
 
-    return LocalTime.ofNanoOfDay(TimeUnit.MICROSECONDS.toNanos((Long) fields.get(fieldName)));
+    return LocalTime.ofNanoOfDay(TimeUnit.MICROSECONDS.toNanos((Long) value));
   }
 
   /**
@@ -128,23 +127,12 @@ public class StructuredRecord implements Serializable {
    * @return value of the field as an object of {@link ZonedDateTime}, returns null if the field has null value
    * logical type timestamp
    * @throws IllegalArgumentException if the field name is not found in the map of fields or the field provided
-   *                                  is not of {@link Schema.LogicalType#TIMESTAMP_MILLIS} or
-   *                                  {@link Schema.LogicalType#TIMESTAMP_MICROS} type.
+   *                                  is not of {@link LogicalType#TIMESTAMP_MILLIS} or
+   *                                  {@link LogicalType#TIMESTAMP_MICROS} type.
    */
+  @Nullable
   public ZonedDateTime getTimestamp(String fieldName) {
-    Schema.LogicalType logicalType = validateAndGetLogicalType(fieldName, schema.getField(fieldName),
-                                                               new HashSet<>(
-      Arrays.asList(Schema.LogicalType.TIMESTAMP_MILLIS.name(), Schema.LogicalType.TIMESTAMP_MICROS.name())));
-
-    if (fields.get(fieldName) == null) {
-      return null;
-    }
-
-    if (logicalType == Schema.LogicalType.TIMESTAMP_MILLIS) {
-      return getZonedDateTime(fieldName, ZoneId.systemDefault(), TimeUnit.MILLISECONDS, 1000L);
-    }
-
-    return getZonedDateTime(fieldName, ZoneId.systemDefault(), TimeUnit.MICROSECONDS, 1000000L);
+   return getTimestamp(fieldName, ZoneId.systemDefault());
   }
 
   /**
@@ -154,85 +142,109 @@ public class StructuredRecord implements Serializable {
    * @param zoneId    zone id for the field
    * @return value of the field as an object of {@link ZonedDateTime}
    * @throws IllegalArgumentException if the field name is not found in the map of fields or the field provided
-   *                                  is not of {@link Schema.LogicalType#TIMESTAMP_MILLIS} or
-   *                                  {@link Schema.LogicalType#TIMESTAMP_MICROS} type.
+   *                                  is not of {@link LogicalType#TIMESTAMP_MILLIS} or
+   *                                  {@link LogicalType#TIMESTAMP_MICROS} type.
    */
+  @Nullable
   public ZonedDateTime getTimestamp(String fieldName, ZoneId zoneId) {
-    Schema.LogicalType logicalType = validateAndGetLogicalType(fieldName, schema.getField(fieldName),
-                                                               new HashSet<>(
-      Arrays.asList(Schema.LogicalType.TIMESTAMP_MILLIS.name(), Schema.LogicalType.TIMESTAMP_MICROS.name())));
-
-    if (fields.get(fieldName) == null) {
+    LogicalType logicalType = validateAndGetLogicalType(fieldName, schema.getField(fieldName),
+                                                               EnumSet.of(LogicalType.TIMESTAMP_MILLIS,
+                                                                          LogicalType.TIMESTAMP_MICROS));
+    Object value = fields.get(fieldName);
+    if (value == null) {
       return null;
     }
 
-    if (logicalType == Schema.LogicalType.TIMESTAMP_MILLIS) {
-      return getZonedDateTime(fieldName, zoneId, TimeUnit.MILLISECONDS, 1000L);
+    if (logicalType == LogicalType.TIMESTAMP_MILLIS) {
+      return getZonedDateTime((long) value, zoneId, TimeUnit.MILLISECONDS);
     }
 
-    return getZonedDateTime(fieldName, zoneId, TimeUnit.MICROSECONDS, 1000000L);
+    return getZonedDateTime((long) value, zoneId, TimeUnit.MICROSECONDS);
   }
 
   /**
    * Get zoned date and time represented by the field.
    *
-   * @param fieldName name of the field
    * @param zoneId    zone id for the field
    * @return {@link ZonedDateTime} represented by field.
    */
-  private ZonedDateTime getZonedDateTime(String fieldName, ZoneId zoneId, TimeUnit unit, long divisor) {
-    Long ts = (Long) fields.get(fieldName);
+  private ZonedDateTime getZonedDateTime(long ts, ZoneId zoneId, TimeUnit unit) {
     // get fractional portion of timestamp, we always store timestamp in micro seconds, so first get that portion.
     // for example: timestamp is 1970-01-01T00:00:01.112456Z, here fraction = 112456, tsInSeconds = 1
+    long divisor = unit == TimeUnit.MICROSECONDS ? 1000000L : 1000L;
     int fraction = (int) (ts % divisor);
-    long tsInSeconds = ts / divisor;
+    long tsInSeconds = unit.toSeconds(ts);
     // create an Instant with time in seconds and fraction which will be stored as nano seconds.
     Instant instant = Instant.ofEpochSecond(tsInSeconds, unit.toNanos(fraction));
     return ZonedDateTime.ofInstant(instant, zoneId);
   }
 
-  private static Schema.LogicalType validateAndGetLogicalType(String fieldName, Schema.Field field,
-                                                              Set<String> logicalTypes)
-    throws IllegalArgumentException {
+  /**
+   * Validate and get underlying logical type if the schema is a union type.
+   *
+   * @param fieldName    name of the field
+   * @param field        field with logical type
+   * @param logicalTypes acceptable logical types
+   * @return {@link LogicalType} underlying logical type that field represents
+   * @throws IllegalArgumentException if the field name is not found in the map of fields or the field provided
+   *                                  is not an acceptable type
+   */
+  private static LogicalType validateAndGetLogicalType(String fieldName, Schema.Field field,
+                                                       EnumSet<LogicalType> logicalTypes) {
     if (field == null) {
       throw new IllegalArgumentException(String.format("Field %s provided does not exist in the schema.", fieldName));
     }
 
     Schema fieldSchema = field.getSchema();
 
-    if (fieldSchema.getType() == Schema.Type.UNION) {
-      for (Schema unionSchema : fieldSchema.getUnionSchemas()) {
-        if (unionSchema.isNullable()) {
-          unionSchema = unionSchema.getNonNullable();
-        }
-        if (unionSchema.getLogicalType() != null && logicalTypes.contains(unionSchema.getLogicalType().name())) {
-          return unionSchema.getLogicalType();
-        }
+    if (fieldSchema.getType() != Schema.Type.UNION) {
+      if (!fieldSchema.getType().isSimpleType() || fieldSchema.getLogicalType() == null) {
+        throw new IllegalArgumentException(String.format("Field %s does not have a logical type.", fieldName));
       }
-      throw new IllegalArgumentException("Field " + fieldName + " is not of logical type " +
-                                           String.join(" or ", logicalTypes));
+
+      if (!logicalTypes.contains(fieldSchema.getLogicalType())) {
+        throw new IllegalArgumentException(String.format("Field %s must be of logical type %s, " +
+                                                           "instead it is of type %s",
+                                                         fieldName, logicalTypes,
+                                                         fieldSchema.getLogicalType()));
+      }
     }
 
-    if (!fieldSchema.isSimpleOrNullableSimple()) {
-      throw new IllegalArgumentException(String.format("Field %s should be either simple or nullable logical type.",
-                                                       fieldName));
-    }
-
-    if (fieldSchema.isNullable()) {
-      fieldSchema = fieldSchema.getNonNullable();
-    }
-
-    if (fieldSchema.getLogicalType() == null) {
-      throw new IllegalArgumentException(String.format("Field %s is not a logical type.", fieldName));
-    }
-
-    if (!logicalTypes.contains(fieldSchema.getLogicalType().name())) {
-      throw new IllegalArgumentException(String.format("Field %s must be of logical type %s, instead it is of type %s",
-                                                       fieldName, String.join(" or ", logicalTypes),
-                                                       fieldSchema.getLogicalType()));
+    LogicalType parsedType = getLogicalTypeFromUnionSchema(fieldSchema, logicalTypes);
+    if (parsedType != null) {
+      return parsedType;
     }
 
     return fieldSchema.getLogicalType();
+  }
+
+  /**
+   * Parse through logical type and get underlying {@link LogicalType}
+   * @param fieldSchema name of the field
+   * @param logicalTypes acceptable logical types
+   * @return {@link LogicalType} represented by the union schema
+   */
+  private static LogicalType getLogicalTypeFromUnionSchema(Schema fieldSchema, EnumSet<LogicalType> logicalTypes) {
+    if (fieldSchema.getType().isSimpleType()) {
+      if (fieldSchema.getLogicalType() == null || !logicalTypes.contains(fieldSchema.getLogicalType())) {
+        return null;
+      }
+    }
+
+    if (fieldSchema.getType() == Schema.Type.UNION) {
+      for (Schema unionSchema : fieldSchema.getUnionSchemas()) {
+        if (unionSchema.getLogicalType() != null && logicalTypes.contains(unionSchema.getLogicalType())) {
+          return unionSchema.getLogicalType();
+        }
+
+        LogicalType logicalType = getLogicalTypeFromUnionSchema(unionSchema, logicalTypes);
+        if (logicalType != null) {
+          return logicalType;
+        }
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -272,13 +284,13 @@ public class StructuredRecord implements Serializable {
      *                                   value is given
      */
     public Builder set(String fieldName, @Nullable Object value) {
-      validateAndGetField(fieldName, value);
+      createField(fieldName, value);
       fields.put(fieldName, value);
       return this;
     }
 
     /**
-     * Sets the date value for {@link Schema.LogicalType#DATE} field
+     * Sets the date value for {@link LogicalType#DATE} field
      *
      * @param fieldName name of the field to set
      * @param localDate value for the field
@@ -288,9 +300,8 @@ public class StructuredRecord implements Serializable {
      * @throws IllegalArgumentException if the provided date is an invalid date
      */
     public Builder setDate(String fieldName, @Nullable LocalDate localDate) {
-      Schema.Field field = validateAndGetField(fieldName, localDate);
-      validateAndGetLogicalType(fieldName, field,
-                                new HashSet<>(Collections.singletonList(Schema.LogicalType.DATE.name())));
+      Schema.Field field = createField(fieldName, localDate);
+      validateAndGetLogicalType(fieldName, field, EnumSet.of(LogicalType.DATE));
       if (localDate == null) {
         fields.put(fieldName, null);
         return this;
@@ -298,13 +309,15 @@ public class StructuredRecord implements Serializable {
       try {
         fields.put(fieldName, Math.toIntExact(localDate.toEpochDay()));
       } catch (ArithmeticException e) {
-        throw new IllegalArgumentException(String.format("Field %s is setting an invalid date", fieldName));
+        // Highest integer is 2,147,483,647 which is Jan 1 2038.
+        throw new IllegalArgumentException(String.format("Field %s is setting an invalid date. " +
+                                                           "Valid date should be below Jan 1 2038", fieldName));
       }
       return this;
     }
 
     /**
-     * Sets the time value for {@link Schema.LogicalType#TIME_MILLIS} or {@link Schema.LogicalType#TIME_MICROS} field
+     * Sets the time value for {@link LogicalType#TIME_MILLIS} or {@link LogicalType#TIME_MICROS} field
      *
      * @param fieldName name of the field to set
      * @param localTime value for the field
@@ -313,9 +326,9 @@ public class StructuredRecord implements Serializable {
      *                                   value is given
      */
     public Builder setTime(String fieldName, @Nullable LocalTime localTime) {
-      Schema.Field field = validateAndGetField(fieldName, localTime);
-      Schema.LogicalType logicalType = validateAndGetLogicalType(fieldName, field, new HashSet<>(
-        Arrays.asList(Schema.LogicalType.TIME_MILLIS.name(), Schema.LogicalType.TIME_MICROS.name())));
+      Schema.Field field = createField(fieldName, localTime);
+      LogicalType logicalType = validateAndGetLogicalType(fieldName, field, EnumSet.of(LogicalType.TIME_MILLIS,
+                                                                                       LogicalType.TIME_MICROS));
 
       if (localTime == null) {
         fields.put(fieldName, null);
@@ -323,7 +336,7 @@ public class StructuredRecord implements Serializable {
       }
 
       long nanos = localTime.toNanoOfDay();
-      if (logicalType == Schema.LogicalType.TIME_MILLIS) {
+      if (logicalType == LogicalType.TIME_MILLIS) {
         int millis = (int) TimeUnit.NANOSECONDS.toMillis(nanos);
         fields.put(fieldName, millis);
         return this;
@@ -336,8 +349,8 @@ public class StructuredRecord implements Serializable {
     }
 
     /**
-     * Sets the timestamp value for {@link Schema.LogicalType#TIMESTAMP_MILLIS} or
-     * {@link Schema.LogicalType#TIMESTAMP_MICROS} field
+     * Sets the timestamp value for {@link LogicalType#TIMESTAMP_MILLIS} or
+     * {@link LogicalType#TIMESTAMP_MICROS} field
      *
      * @param fieldName name of the field to set
      * @param zonedDateTime value for the field
@@ -347,10 +360,9 @@ public class StructuredRecord implements Serializable {
      * @throws IllegalArgumentException if the provided date is an invalid timestamp
      */
     public Builder setTimestamp(String fieldName, @Nullable ZonedDateTime zonedDateTime) {
-      Schema.Field field = validateAndGetField(fieldName, zonedDateTime);
-      Schema.LogicalType logicalType = validateAndGetLogicalType(fieldName, field, new HashSet<>(
-        Arrays.asList(Schema.LogicalType.TIMESTAMP_MILLIS.name(), Schema.LogicalType.TIMESTAMP_MICROS.name())));
-
+      Schema.Field field = createField(fieldName, zonedDateTime);
+      LogicalType logicalType = validateAndGetLogicalType(fieldName, field, EnumSet.of(LogicalType.TIMESTAMP_MILLIS,
+                                                                                       LogicalType.TIMESTAMP_MICROS));
 
       if (zonedDateTime == null) {
         fields.put(fieldName, null);
@@ -359,8 +371,9 @@ public class StructuredRecord implements Serializable {
 
       Instant instant = zonedDateTime.toInstant();
       try {
-        if (logicalType == Schema.LogicalType.TIMESTAMP_MILLIS) {
+        if (logicalType == LogicalType.TIMESTAMP_MILLIS) {
           long millis = Math.multiplyExact(instant.getEpochSecond(), 1000L);
+          TimeUnit.NANOSECONDS.toMillis(instant.getEpochSecond());
           long tsMillis = Math.addExact(millis, instant.getNano() / 1000000L);
           fields.put(fieldName, tsMillis);
           return this;
@@ -378,7 +391,7 @@ public class StructuredRecord implements Serializable {
     /**
      * Convert the given date into the type of the given field, and set the value for that field.
      * A Date can be converted into a long or a string.
-     * This method does not support {@link Schema.LogicalType#DATE}
+     * This method does not support {@link LogicalType#DATE}
      *
      * @deprecated As of release 5.1.0, use {@link StructuredRecord.Builder#setDate(String, LocalDate)} instead.
      *
@@ -396,7 +409,7 @@ public class StructuredRecord implements Serializable {
     /**
      * Convert the given date into the type of the given field, and set the value for that field.
      * A Date can be converted into a long or a string, using a date format, if supplied.
-     * This method does not support {@link Schema.LogicalType#DATE}
+     * This method does not support {@link LogicalType#DATE}
      *
      * @deprecated As of release 5.1.0, use {@link StructuredRecord.Builder#setDate(String, LocalDate)} instead.
      *
@@ -411,7 +424,7 @@ public class StructuredRecord implements Serializable {
     @Deprecated
     public Builder convertAndSet(String fieldName, @Nullable Date date,
                                  @Nullable DateFormat dateFormat) throws UnexpectedFormatException {
-      Schema.Field field = validateAndGetField(fieldName, date);
+      Schema.Field field = createField(fieldName, date);
       boolean isNullable = field.getSchema().isNullable();
       if (isNullable && date == null) {
         fields.put(fieldName, null);
@@ -441,7 +454,7 @@ public class StructuredRecord implements Serializable {
      *                                   value is given, or the string cannot be converted to the type for the field
      */
     public Builder convertAndSet(String fieldName, @Nullable String strVal) throws UnexpectedFormatException {
-      Schema.Field field = validateAndGetField(fieldName, strVal);
+      Schema.Field field = createField(fieldName, strVal);
       fields.put(fieldName, convertString(field.getSchema(), strVal));
       return this;
     }
@@ -508,7 +521,7 @@ public class StructuredRecord implements Serializable {
       }
     }
 
-    private Schema.Field validateAndGetField(String fieldName, Object val) {
+    private Schema.Field createField(String fieldName, Object val) {
       Schema.Field field = schema.getField(fieldName);
       if (field == null) {
         throw new UnexpectedFormatException("field " + fieldName + " is not in the schema.");
