@@ -39,6 +39,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -486,7 +488,8 @@ public class MetricsHandlerTestRun extends MetricsSuiteTestBase {
     deleteTags.put(Constants.Metrics.Tag.APP, "WordCount1");
     deleteTags.put(Constants.Metrics.Tag.FLOW, "WordCounter");
     // delete the added metrics for testing interpolator
-    MetricDeleteQuery deleteQuery = new MetricDeleteQuery(start, end, deleteTags);
+    MetricDeleteQuery deleteQuery = new MetricDeleteQuery(start, end, Collections.emptySet(),
+                                                          deleteTags, new ArrayList<>(deleteTags.keySet()));
     metricStore.delete(deleteQuery);
   }
 
@@ -562,7 +565,8 @@ public class MetricsHandlerTestRun extends MetricsSuiteTestBase {
     deleteTags.put(Constants.Metrics.Tag.APP, "WordCount1");
     deleteTags.put(Constants.Metrics.Tag.FLOW, "WordCounter");
     // delete the added metrics for testing auto resolutions
-    MetricDeleteQuery deleteQuery = new MetricDeleteQuery(start, (start + 36000), deleteTags);
+    MetricDeleteQuery deleteQuery = new MetricDeleteQuery(start, (start + 36000), Collections.emptySet(), deleteTags,
+                                                          new ArrayList<>(deleteTags.keySet()));
     metricStore.delete(deleteQuery);
   }
 

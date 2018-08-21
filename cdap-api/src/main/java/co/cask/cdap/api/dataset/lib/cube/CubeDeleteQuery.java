@@ -25,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import javax.annotation.Nullable;
 
 /**
  * Defines a query for deleting data in {@link Cube}.
@@ -57,35 +56,6 @@ public class CubeDeleteQuery {
     this.measureNames = Collections.unmodifiableCollection(new ArrayList<>(measureNames));
     this.dimensionValues = Collections.unmodifiableMap(new LinkedHashMap<>(dimensionValues));
     this.tagPredicate = tagPredicate;
-  }
-
-  /**
-   * Creates instance of {@link CubeDeleteQuery} that defines selection of data to delete from {@link Cube}.
-   * @param startTs start time of the data selection, in seconds since epoch
-   * @param endTs end time of the data selection, in seconds since epoch
-   * @param resolution resolution of the aggregations to delete from
-   * @param dimensionValues dimension name, dimension value pairs that define the data selection, note that this should
-   *                        match the prefix of the aggregation group of the metrics.
-   * @param measureName name of the measure to delete, {@code null} means delete all
-   */
-  public CubeDeleteQuery(long startTs, long endTs, int resolution,
-                         Map<String, String> dimensionValues, @Nullable String measureName) {
-
-    this(startTs, endTs, resolution, dimensionValues,
-         measureName == null ? Collections.emptyList() : Collections.singletonList(measureName),
-         aggregates -> Collections.indexOfSubList(aggregates, new ArrayList<>(dimensionValues.keySet())) == 0);
-  }
-
-  /**
-   * Creates instance of {@link CubeDeleteQuery} that defines selection of data to delete from {@link Cube}.
-   * @param startTs start time of the data selection, in seconds since epoch
-   * @param endTs end time of the data selection, in seconds since epoch
-   * @param resolution resolution of the aggregations to delete from
-   * @param dimensionValues dimension name, dimension value pairs that define the data selection, note that this should
-   *                        match the prefix of the aggregation group of the metrics.
-   */
-  public CubeDeleteQuery(long startTs, long endTs, int resolution, Map<String, String> dimensionValues) {
-    this(startTs, endTs, resolution, dimensionValues, null);
   }
 
   public long getStartTs() {

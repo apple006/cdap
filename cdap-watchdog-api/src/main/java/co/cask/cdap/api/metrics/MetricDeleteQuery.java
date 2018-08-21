@@ -19,7 +19,6 @@ package co.cask.cdap.api.metrics;
 import com.google.common.base.Joiner;
 import com.google.common.base.Objects;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -38,22 +37,12 @@ public class MetricDeleteQuery {
   private final Predicate<List<String>> tagPredicate;
 
   public MetricDeleteQuery(long startTs, long endTs, Collection<String> metricNames,
-                           Map<String, String> sliceByTagValues, Predicate<List<String>> tagPredicate) {
+                           Map<String, String> sliceByTagValues, List<String> aggregationTags) {
     this.startTs = startTs;
     this.endTs = endTs;
     this.metricNames = metricNames;
     this.sliceByTagValues = new LinkedHashMap<>(sliceByTagValues);
-    this.tagPredicate = tagPredicate;
-  }
-
-  public MetricDeleteQuery(long startTs, long endTs, Collection<String> metricNames,
-                           Map<String, String> sliceByTagValues) {
-    this(startTs, endTs, metricNames, sliceByTagValues,
-         aggregates -> Collections.indexOfSubList(aggregates, new ArrayList<>(sliceByTagValues.keySet())) == 0);
-  }
-
-  public MetricDeleteQuery(long startTs, long endTs, Map<String, String> sliceByTagValues) {
-    this(startTs, endTs, Collections.emptyList(), sliceByTagValues);
+    this.tagPredicate = aggregates -> Collections.indexOfSubList(aggregates, aggregationTags) == 0;
   }
 
   public long getStartTs() {

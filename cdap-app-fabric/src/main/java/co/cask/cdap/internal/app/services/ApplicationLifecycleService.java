@@ -100,6 +100,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -622,7 +623,8 @@ public class ApplicationLifecycleService extends AbstractIdleService {
     tags.put(Constants.Metrics.Tag.NAMESPACE, applicationId.getNamespace());
     // add or replace application name in the tagMap
     tags.put(Constants.Metrics.Tag.APP, spec.getName());
-    MetricDeleteQuery deleteQuery = new MetricDeleteQuery(0, endTs, tags);
+    MetricDeleteQuery deleteQuery = new MetricDeleteQuery(0, endTs, Collections.emptySet(), tags,
+                                                          new ArrayList<>(tags.keySet()));
     metricStore.delete(deleteQuery);
   }
 

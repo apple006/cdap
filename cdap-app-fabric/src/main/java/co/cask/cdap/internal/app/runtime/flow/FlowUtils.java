@@ -75,6 +75,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -395,7 +396,7 @@ public final class FlowUtils {
     LOG.info("Deleting 'system.queue.pending' metric for context {}", tags);
     // we must delete up to the current time - let's round up to the next second.
     long nextSecond = System.currentTimeMillis() / 1000 + 1;
-    metricStore.delete(new MetricDeleteQuery(0L, nextSecond, names, tags));
+    metricStore.delete(new MetricDeleteQuery(0L, nextSecond, names, tags, new ArrayList<>(tags.keySet())));
   }
 
   /**
