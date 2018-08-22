@@ -82,21 +82,28 @@ public final class Schema implements Serializable {
   }
 
   /**
-   * Logical type to represent date and time using {@link Schema}. Schema of logical types is schema of primitive types
-   * with extra attribute `logicalType`.
+   * Logical type to represent date and time using {@link Schema}. Schema of logical types is the schema of primitive
+   * types with an extra attribute `logicalType`.
    *
-   * For example, the json schema for logicaltype will be as below:
+   * Logical type DATE relies on INT as underlying primitive type
+   * Logical type TIMESTAMP_MILLIS relies on LONG as underlying primitive type
+   * Logical type TIMESTAMP_MICROS relies on LONG as underlying primitive type
+   * Logical type TIME_MILLIS relies on INT as underlying primitive type
+   * Logical type TIME_MICROS relies on LONG as underlying primitive type
+   *
+   * For example, the json schema for logicaltype date will be as below:
    * {
    *   "type" : "int",
    *   "logicalType" : "date"
    * }
+   *
    */
   public enum LogicalType {
-    DATE, // underlying primitive type is INT
-    TIMESTAMP_MILLIS, // underlying primitive type is LONG
-    TIMESTAMP_MICROS, // underlying primitive type is LONG
-    TIME_MILLIS, // underlying primitive type is INT
-    TIME_MICROS // underlying primitive type is LONG
+    DATE,
+    TIMESTAMP_MILLIS,
+    TIMESTAMP_MICROS,
+    TIME_MILLIS,
+    TIME_MICROS
   }
 
   /**

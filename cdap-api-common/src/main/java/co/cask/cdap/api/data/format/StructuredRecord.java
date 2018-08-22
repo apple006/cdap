@@ -77,6 +77,7 @@ public class StructuredRecord implements Serializable {
    * @return value of the field.
    */
   @SuppressWarnings("unchecked")
+  @Nullable
   public <T> T get(String fieldName) {
     return (T) fields.get(fieldName);
   }
@@ -86,14 +87,13 @@ public class StructuredRecord implements Serializable {
    *
    * @param fieldName date field to get.
    * @return value of the field as a {@link LocalDate}
-   * @throws UnexpectedFormatException if the field name is not present in schema or the provided field
-   *                                   is not of {@link LogicalType#DATE} type.
+   * @throws UnexpectedFormatException if the provided field is not of {@link LogicalType#DATE} type.
    */
   @Nullable
   public LocalDate getDate(String fieldName) {
-    validateAndGetLogicalType(fieldName, EnumSet.of(LogicalType.DATE));
+    LogicalType logicalType = validateAndGetLogicalType(schema.getField(fieldName), EnumSet.of(LogicalType.DATE));
     Integer value = (Integer) fields.get(fieldName);
-    return value == null ? null : LocalDate.ofEpochDay(value.longValue());
+    return (value == null || logicalType == null) ? null : LocalDate.ofEpochDay(value.longValue());
   }
 
   /**
@@ -102,16 +102,15 @@ public class StructuredRecord implements Serializable {
    *
    * @param fieldName time field to get.
    * @return value of the field as a {@link LocalTime}
-   * @throws UnexpectedFormatException if the field name is not present in schema or the provided field
-   *                                   is not of {@link LogicalType#TIME_MILLIS} or
+   * @throws UnexpectedFormatException if the provided field is not of {@link LogicalType#TIME_MILLIS} or
    *                                   {@link LogicalType#TIME_MICROS} type.
    */
   @Nullable
   public LocalTime getTime(String fieldName) {
-    LogicalType logicalType = validateAndGetLogicalType(fieldName, EnumSet.of(LogicalType.TIME_MILLIS,
-                                                                              LogicalType.TIME_MICROS));
+    LogicalType logicalType = validateAndGetLogicalType(schema.getField(fieldName),
+                                                        EnumSet.of(LogicalType.TIME_MILLIS, LogicalType.TIME_MICROS));
     Object value = fields.get(fieldName);
-    if (value == null) {
+    if (value == null || logicalType == null) {
       return null;
     }
 
@@ -129,9 +128,7 @@ public class StructuredRecord implements Serializable {
    *
    * @param fieldName zoned date time field to get.
    * @return value of the field as a {@link ZonedDateTime}
-   * logical type timestamp
-   * @throws UnexpectedFormatException if the field name is not found in the map of fields or the provided field
-   *                                   is not of {@link LogicalType#TIMESTAMP_MILLIS} or
+   * @throws UnexpectedFormatException if the provided field is not of {@link LogicalType#TIMESTAMP_MILLIS} or
    *                                   {@link LogicalType#TIMESTAMP_MICROS} type.
    */
   @Nullable
@@ -147,58 +144,41 @@ public class StructuredRecord implements Serializable {
    * @param fieldName zoned date time field to get.
    * @param zoneId zone id for the field
    * @return value of the field as a {@link ZonedDateTime}
-   * @throws UnexpectedFormatException if the field name is not found in the map of fields or the provided field
-   *                                   is not of {@link LogicalType#TIMESTAMP_MILLIS} or
+   * @throws UnexpectedFormatException if the provided field is not of {@link LogicalType#TIMESTAMP_MILLIS} or
    *                                   {@link LogicalType#TIMESTAMP_MICROS} type.
    */
   @Nullable
   public ZonedDateTime getTimestamp(String fieldName, ZoneId zoneId) {
-    LogicalType logicalType = validateAndGetLogicalType(fieldName, EnumSet.of(LogicalType.TIMESTAMP_MILLIS,
-                                                                              LogicalType.TIMESTAMP_MICROS));
+    LogicalType logicalType = validateAndGetLogicalType(schema.getField(fieldName),
+                                                        EnumSet.of(LogicalType.TIMESTAMP_MILLIS,
+                                                                   LogicalType.TIMESTAMP_MICROS));
     Object value = fields.get(fieldName);
-    if (value == null) {
+    if (value == null || logicalType == null) {
       return null;
     }
 
     if (logicalType == LogicalType.TIMESTAMP_MILLIS) {
-      return getZonedDateTime((long) value, zoneId, TimeUnit.MILLISECONDS);
+      return getZonedDateTime((long) value, TimeUnit.MILLISECONDS, zoneId);
     }
 
-    return getZonedDateTime((long) value, zoneId, TimeUnit.MICROSECONDS);
+    return getZonedDateTime((long) value, TimeUnit.MICROSECONDS, zoneId);
   }
 
   /**
    * Get zoned date and time represented by the field.
    *
-   * @param ts timestamp from which
+   * @param ts timestamp to be used to get {@link ZonedDateTime}
    * @param zoneId zone id for the field
    * @param unit time unit for ts
    * @return {@link ZonedDateTime} represented by field.
    */
-  private ZonedDateTime getZonedDateTime(long ts, ZoneId zoneId, TimeUnit unit) {
-    long divisor = unit == TimeUnit.MICROSECONDS ? 1000000L : 1000L;
-    int fraction = (int) (ts % divisor);
+  private ZonedDateTime getZonedDateTime(long ts, TimeUnit unit, ZoneId zoneId) {
+    long mod = TimeUnit.SECONDS.convert(1, unit);
+    int fraction = (int) (ts % mod);
     long tsInSeconds = unit.toSeconds(ts);
     // create an Instant with time in seconds and fraction which will be stored as nano seconds.
     Instant instant = Instant.ofEpochSecond(tsInSeconds, unit.toNanos(fraction));
     return ZonedDateTime.ofInstant(instant, zoneId);
-  }
-
-  /**
-   * Validates and returns the underlying {@link LogicalType} for the given field.
-   *
-   * @param fieldName name of the field
-   * @param allowedTypes acceptable logical types
-   * @return the underlying {@link LogicalType} for the field
-   * @throws UnexpectedFormatException if the field name is not found in the map of fields or the field provided
-   *                                   is not an acceptable type
-   */
-  private LogicalType validateAndGetLogicalType(String fieldName, Set<LogicalType> allowedTypes) {
-    Schema.Field field = schema.getField(fieldName);
-    if (field == null) {
-      throw new UnexpectedFormatException(String.format("Field %s does not exists in the schema", fieldName));
-    }
-    return validateAndGetLogicalType(field, allowedTypes);
   }
 
   /**

@@ -191,6 +191,20 @@ public class StructuredRecordBuilderTest {
     Assert.assertNull(StructuredRecord.builder(schema).setTime("x", null).build().getTime("x"));
   }
 
+  @Test
+  public void testGetNonExistentField() {
+    Schema schema = Schema.recordOf("record", Schema.Field.of("x", Schema.of(Schema.LogicalType.DATE)));
+    LocalDate date = LocalDate.of(2018, 11, 11);
+    Assert.assertNull(StructuredRecord.builder(schema).setDate("x", date).build().getDate("y"));
+  }
+
+  @Test(expected = UnexpectedFormatException.class)
+  public void testSetNonExistentField() {
+    Schema schema = Schema.recordOf("record", Schema.Field.of("x", Schema.of(Schema.LogicalType.DATE)));
+    LocalDate date = LocalDate.of(2018, 11, 11);
+    StructuredRecord.builder(schema).setDate("y", date).build();
+  }
+
   @Test(expected = UnexpectedFormatException.class)
   public void testInvalidNestedUnionSchemaType() {
     Schema schema = Schema.recordOf("x", Schema.Field.of("x", Schema.unionOf(
