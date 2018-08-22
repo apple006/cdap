@@ -17,6 +17,7 @@
 package co.cask.cdap.format;
 
 import co.cask.cdap.api.data.format.StructuredRecord;
+import co.cask.cdap.api.data.format.UnexpectedFormatException;
 import co.cask.cdap.api.data.schema.Schema;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.TimeZone;
@@ -130,16 +132,17 @@ public class StructuredRecordBuilderTest {
                                     Schema.Field.of("timestamp", Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)));
 
     ZonedDateTime expectedMillis = ZonedDateTime.of(2018, 11, 11, 11, 11, 11, 123 * 1000 * 1000,
-                                                    ZoneId.systemDefault());
+                                                    ZoneId.ofOffset("UTC", ZoneOffset.UTC));
     StructuredRecord record = StructuredRecord.builder(schema)
       .set("id", 1)
       .set("name", "test")
       .setTimestamp("timestamp", expectedMillis).build();
 
-    ZonedDateTime actual = record.getTimestamp("timestamp", ZoneId.systemDefault());
+    ZonedDateTime actual = record.getTimestamp("timestamp", ZoneId.ofOffset("UTC", ZoneOffset.UTC));
     Assert.assertEquals(expectedMillis, actual);
 
-    ZonedDateTime expectedMicros = ZonedDateTime.of(2018, 11, 11, 11, 11, 11, 123456 * 1000, ZoneId.systemDefault());
+    ZonedDateTime expectedMicros = ZonedDateTime.of(2018, 11, 11, 11, 11, 11, 123456 * 1000,
+                                                    ZoneId.ofOffset("UTC", ZoneOffset.UTC));
     schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
                              Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
                              Schema.Field.of("timestamp", Schema.of(Schema.LogicalType.TIMESTAMP_MICROS)));
@@ -170,16 +173,16 @@ public class StructuredRecordBuilderTest {
   @Test
   public void testUnionSchemaType() {
     Schema schema = Schema.recordOf("x", Schema.Field.of("x", Schema.unionOf(
+      Schema.unionOf(Schema.nullableOf(Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)),
+                     Schema.of(Schema.Type.STRING)),
       Schema.of(Schema.Type.NULL),
       Schema.of(Schema.Type.INT),
       Schema.of(Schema.Type.LONG),
       Schema.of(Schema.LogicalType.DATE),
-      Schema.nullableOf(Schema.of(Schema.LogicalType.TIME_MILLIS)),
-      Schema.unionOf(Schema.nullableOf(Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)),
-                     Schema.of(Schema.Type.STRING)))));
+      Schema.nullableOf(Schema.of(Schema.LogicalType.TIME_MILLIS)))));
 
     LocalDate date = LocalDate.of(2018, 11, 11);
-    ZonedDateTime zonedDateTime = ZonedDateTime.of(2018, 11, 11, 11, 11, 11, 0, ZoneId.systemDefault());
+    ZonedDateTime zonedDateTime = ZonedDateTime.of(2018, 11, 11, 11, 11, 11, 0, ZoneId.ofOffset("UTC", ZoneOffset.UTC));
     LocalTime time = LocalTime.of(21, 1, 1);
     Assert.assertEquals(date, StructuredRecord.builder(schema).setDate("x", date).build().getDate("x"));
     StructuredRecord x = StructuredRecord.builder(schema).setTimestamp("x", zonedDateTime).build();
@@ -188,7 +191,21 @@ public class StructuredRecordBuilderTest {
     Assert.assertNull(StructuredRecord.builder(schema).setTime("x", null).build().getTime("x"));
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = UnexpectedFormatException.class)
+  public void testInvalidNestedUnionSchemaType() {
+    Schema schema = Schema.recordOf("x", Schema.Field.of("x", Schema.unionOf(
+      Schema.unionOf(Schema.nullableOf(Schema.of(Schema.LogicalType.TIMESTAMP_MILLIS)),
+                     Schema.of(Schema.Type.STRING)),
+      Schema.of(Schema.Type.NULL),
+      Schema.of(Schema.Type.INT),
+      Schema.of(Schema.Type.LONG),
+      Schema.nullableOf(Schema.of(Schema.LogicalType.TIME_MILLIS)))));
+
+    LocalDate date = LocalDate.of(2018, 11, 11);
+    Assert.assertEquals(date, StructuredRecord.builder(schema).setDate("x", date).build().getDate("x"));
+  }
+
+  @Test(expected = UnexpectedFormatException.class)
   public void testInvalidDateLogicalType() {
     Schema schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
                                     Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
@@ -198,7 +215,7 @@ public class StructuredRecordBuilderTest {
     StructuredRecord.builder(schema).set("id", 1).set("name", "test").setTime("date", expected).build();
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = UnexpectedFormatException.class)
   public void testInvalidTimeLogicalType() {
     Schema schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
                                     Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
@@ -208,7 +225,7 @@ public class StructuredRecordBuilderTest {
     StructuredRecord.builder(schema).set("id", 1).set("name", "test").setDate("time", expected).build();
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test(expected = UnexpectedFormatException.class)
   public void testInvalidTimestampLogicalType() {
     Schema schema = Schema.recordOf("test", Schema.Field.of("id", Schema.of(Schema.Type.INT)),
                                     Schema.Field.of("name", Schema.of(Schema.Type.STRING)),
