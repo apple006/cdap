@@ -36,6 +36,16 @@ public class MetricDeleteQuery {
   private final Map<String, String> sliceByTagValues;
   private final Predicate<List<String>> tagPredicate;
 
+  /**
+   * Creates instance of {@link MetricDeleteQuery} that defines selection of data to delete from the metric store.
+   *
+   * @param startTs start time of the data selection, in seconds since epoch
+   * @param endTs end time of the data selection, in seconds since epoch
+   * @param metricNames ame of the metric names to delete, empty collection means delete all
+   * @param sliceByTagValues the key value pair of the tag and value
+   * @param aggregationTags list of tags for the metric aggregation group, the order must be same as the prefix of the
+   *                        aggregation groups we defined in {@link MetricStore}
+   */
   public MetricDeleteQuery(long startTs, long endTs, Collection<String> metricNames,
                            Map<String, String> sliceByTagValues, List<String> aggregationTags) {
     this.startTs = startTs;
