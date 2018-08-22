@@ -28,7 +28,6 @@ import Mousetrap from 'mousetrap';
 import DataPrepStore from 'components/DataPrep/store';
 import DataPrepActions from 'components/DataPrep/store/DataPrepActions';
 import {UncontrolledDropdown} from 'components/UncontrolledComponents';
-import CardActionFeedback from 'components/CardActionFeedback';
 
 require('./UsingPatternsModal.scss');
 
@@ -44,7 +43,6 @@ export default class UsingPatternsModal extends Component {
         end: ''
       },
       nDigitPattern: '',
-      error: '',
       showEditPatternLabel: false,
       showEditPatternTxtBox: false
     };
@@ -442,17 +440,9 @@ export default class UsingPatternsModal extends Component {
             }
           </div>
         </ModalBody>
-        {
-          this.state.error ?
-            <CardActionFeedback
-              type="DANGER"
-              message={this.state.error}
-            />
-          :
-            <ModalFooter>
-              {this.renderFooterButton()}
-            </ModalFooter>
-        }
+        <ModalFooter>
+          {this.renderFooterButton()}
+        </ModalFooter>
       </Modal>
     );
   }
