@@ -15,7 +15,6 @@
  */
 
 import PropTypes from 'prop-types';
-
 import React, { Component } from 'react';
 import IconSVG from 'components/IconSVG';
 import classnames from 'classnames';
@@ -28,7 +27,7 @@ import {
   setGCSAsActiveBrowser,
   setBigQueryAsActiveBrowser,
   listBigQueryTables,
-  reset as resetDataPrepBrowserStore,
+  reset as resetDataPrepBrowserStore
 } from 'components/DataPrep/DataPrepBrowser/DataPrepBrowserStore/ActionCreator';
 import {Route, Redirect, Switch} from 'react-router-dom';
 import {getCurrentNamespace} from 'services/NamespaceStore';
@@ -42,13 +41,16 @@ import isNil from 'lodash/isNil';
 import ExpandableMenu from 'components/UncontrolledComponents/ExpandableMenu';
 import ConnectionPopover from 'components/DataPrepConnections/ConnectionPopover';
 import DataPrepStore from 'components/DataPrep/store';
-import {objectQuery, preventPropagation} from 'services/helpers';
+import {objectQuery, preventPropagation, isNilOrEmpty} from 'services/helpers';
 import Helmet from 'react-helmet';
 import LoadingSVGCentered from 'components/LoadingSVGCentered';
 import queryString from 'query-string';
 import Version from 'services/VersionRange/Version';
 import { MIN_DATAPREP_VERSION } from 'components/DataPrep';
 import NavLinkWrapper from 'components/NavLinkWrapper';
+import {ConnectionType} from 'components/DataPrepConnections/ConnectionType';
+import find from 'lodash/find';
+import If from 'components/If';
 
 require('./DataPrepConnections.scss');
 const PREFIX = 'features.DataPrepConnections';
@@ -72,6 +74,8 @@ export default class DataPrepConnections extends Component {
       backendChecking: true,
       backendDown: false,
       loading: this.props.enableRouting ? true : false,
+      connectionTypes: [],
+      defaultConnection: null,
       databaseList: [],
       kafkaList: [],
       s3List: [],
@@ -90,9 +94,6 @@ export default class DataPrepConnections extends Component {
 
   componentWillMount() {
     this.checkBackendUp();
-    if (isNil(this.props.match) || this.props.match.path.indexOf('connections') === -1) {
-      setActiveBrowser({name: 'file'});
-    }
     if (!this.props.enableRouting) {
       this.dataprepSubscription = DataPrepStore.subscribe(() => {
         let {workspaceInfo} = DataPrepStore.getState().dataprep;
@@ -116,6 +117,7 @@ export default class DataPrepConnections extends Component {
       this.dataprepSubscription();
     }
   }
+
   checkBackendUp() {
     let namespace = getCurrentNamespace();
 
@@ -137,13 +139,12 @@ export default class DataPrepConnections extends Component {
           return;
         }
 
-
         this.setState({
           backendChecking: false,
           backendDown: false
         });
 
-        this.fetchConnectionsList();
+        this.fetchConnectionTypes();
       }, (err) => {
         if (err.statusCode === 503) {
           console.log('backend not started');
@@ -205,6 +206,33 @@ export default class DataPrepConnections extends Component {
 
   onServiceStart() {
     this.checkBackendUp();
+  }
+
+  fetchConnectionTypes = () => {
+    MyDataPrepApi
+      .listConnectionTypes({
+        namespace: getCurrentNamespace()
+      })
+      .subscribe(
+        res => {
+          if (res.defaultConnection) {
+            // Once we get a default connection from backend
+            // set  appropriate browser as active when 
+            this.setState({
+              defaultConnection: res.defaultConnection
+            });
+          }
+          this.setState({
+            connectionTypes: res
+          });
+          this.fetchConnectionsList();
+          // TODO get default connection from backend and integrate.
+        },
+        err => {
+          console.log(err);
+          // Will rebase with error handling PR to actually surface the error.
+        }
+      );
   }
 
   fetchConnectionsList(action, targetId) {
@@ -276,6 +304,7 @@ export default class DataPrepConnections extends Component {
       this.props.onWorkspaceCreate(workspaceId);
     }
   }
+
   renderDatabaseDetail() {
     let namespace = getCurrentNamespace();
     const baseLinkPath = `/ns/${namespace}/connections`;
@@ -447,7 +476,7 @@ export default class DataPrepConnections extends Component {
   }
 
   renderPanel() {
-    if (!this.state.sidePanelExpanded)  { return null; }
+    if (!this.state.sidePanelExpanded) { return null; }
 
     let namespace = getCurrentNamespace();
     const baseLinkPath = `/ns/${namespace}/connections`;
@@ -470,103 +499,118 @@ export default class DataPrepConnections extends Component {
         </div>
 
         <div className="connections-menu">
-          <div className="menu-item">
-            <NavLinkWrapper
-              to={`${baseLinkPath}/upload`}
-              activeClassName="active"
-              onClick={this.handlePropagation.bind(this, {type: 'upload'})}
-              isNativeLink={this.props.singleWorkspaceMode}
-            >
-              <span className="fa fa-fw">
-                <IconSVG name="icon-upload" />
-              </span>
+          <If condition={find(this.state.connectionTypes, {type: ConnectionType.UPLOAD})}>
+            <div className="menu-item">
+              <NavLinkWrapper
+                to={`${baseLinkPath}/upload`}
+                activeClassName="active"
+                onClick={this.handlePropagation.bind(this, {type: 'upload'})}
+                isNativeLink={this.props.singleWorkspaceMode}
+              >
+                <span className="fa fa-fw">
+                  <IconSVG name="icon-upload" />
+                </span>
 
-              <span>
-                {T.translate(`${PREFIX}.upload`)}
-              </span>
-            </NavLinkWrapper>
-          </div>
-
-          <div className="menu-item">
-            <NavLinkWrapper
-              to={`${baseLinkPath}/browser`}
-              activeClassName="active"
-              onClick={this.handlePropagation.bind(this, {type: 'file'})}
-              isNativeLink={this.props.singleWorkspaceMode}
-            >
-              <span className="fa fa-fw">
-                <IconSVG name="icon-hdfs" />
-              </span>
-
-              <span>
-                {T.translate(`${PREFIX}.hdfs`)}
-              </span>
-            </NavLinkWrapper>
-          </div>
-
-          <ExpandableMenu>
-            <div>
-              <span className="fa fa-fw">
-                <IconSVG name="icon-database" />
-              </span>
-              <span>
-              {T.translate(`${PREFIX}.database`, {count: this.state.databaseList.length})}
-              </span>
+                <span>
+                  {T.translate(`${PREFIX}.upload`)}
+                </span>
+              </NavLinkWrapper>
             </div>
-            {this.renderDatabaseDetail()}
-          </ExpandableMenu>
+          </If>
 
-          <ExpandableMenu>
-            <div>
-              <span className="fa fa-fw">
-                <IconSVG name="icon-kafka" />
-              </span>
-              <span>
-              {T.translate(`${PREFIX}.kafka`, {count: this.state.kafkaList.length})}
-              </span>
-            </div>
-            {this.renderKafkaDetail()}
-          </ExpandableMenu>
+          <If condition={find(this.state.connectionTypes, {type: ConnectionType.FILE})}>
+            <div className="menu-item">
+              <NavLinkWrapper
+                to={`${baseLinkPath}/browser`}
+                activeClassName="active"
+                onClick={this.handlePropagation.bind(this, {type: 'file'})}
+                isNativeLink={this.props.singleWorkspaceMode}
+              >
+                <span className="fa fa-fw">
+                  <IconSVG name="icon-hdfs" />
+                </span>
 
-          <ExpandableMenu>
-            <div>
-              <span className="fa fa-fw">
-                <IconSVG name="icon-s3" />
-              </span>
-              <span>
-              {T.translate(`${PREFIX}.s3`, {count: this.state.s3List.length})}
-              </span>
+                <span>
+                  {T.translate(`${PREFIX}.hdfs`)}
+                </span>
+              </NavLinkWrapper>
             </div>
-            {this.renderS3Detail()}
-          </ExpandableMenu>
+          </If>
 
-          <ExpandableMenu>
-            <div>
-              <span className="fa fa-fw">
-                <IconSVG name="icon-storage" />
-              </span>
-              <span>
-              {T.translate(`${PREFIX}.gcs`, {count: this.state.gcsList.length})}
-              </span>
-            </div>
-            {this.renderGCSDetail()}
-          </ExpandableMenu>
+          <If condition={find(this.state.connectionTypes, {type: ConnectionType.DATABASE})}>
+            <ExpandableMenu>
+              <div>
+                <span className="fa fa-fw">
+                  <IconSVG name="icon-database" />
+                </span>
+                <span>
+                {T.translate(`${PREFIX}.database`, {count: this.state.databaseList.length})}
+                </span>
+              </div>
+              {this.renderDatabaseDetail()}
+            </ExpandableMenu>
+          </If>
 
-          <ExpandableMenu>
-            <div>
-              <span className="fa fa-fw">
-                <IconSVG name="icon-bigquery" />
-              </span>
-              <span>
-              {T.translate(`${PREFIX}.bigquery`, {count: this.state.bigQueryList.length})}
-              </span>
-            </div>
-            {this.renderBigQueryDetail()}
-          </ExpandableMenu>
+          <If condition={find(this.state.connectionTypes, {type: ConnectionType.KAFKA})}>
+            <ExpandableMenu>
+              <div>
+                <span className="fa fa-fw">
+                  <IconSVG name="icon-kafka" />
+                </span>
+                <span>
+                {T.translate(`${PREFIX}.kafka`, {count: this.state.kafkaList.length})}
+                </span>
+              </div>
+              {this.renderKafkaDetail()}
+            </ExpandableMenu>
+          </If>
+
+          <If condition={find(this.state.connectionTypes, {type: ConnectionType.S3})}>
+            <ExpandableMenu>
+              <div>
+                <span className="fa fa-fw">
+                  <IconSVG name="icon-s3" />
+                </span>
+                <span>
+                {T.translate(`${PREFIX}.s3`, {count: this.state.s3List.length})}
+                </span>
+              </div>
+              {this.renderS3Detail()}
+            </ExpandableMenu>
+          </If>
+
+          <If condition={find(this.state.connectionTypes, {type: ConnectionType.GCS})}>
+            <ExpandableMenu>
+              <div>
+                <span className="fa fa-fw">
+                  <IconSVG name="icon-storage" />
+                </span>
+                <span>
+                {T.translate(`${PREFIX}.gcs`, {count: this.state.gcsList.length})}
+                </span>
+              </div>
+              {this.renderGCSDetail()}
+            </ExpandableMenu>
+          </If>
+
+          <If condition={find(this.state.connectionTypes, {type: ConnectionType.BIGQUERY})}>
+            <ExpandableMenu>
+              <div>
+                <span className="fa fa-fw">
+                  <IconSVG name="icon-bigquery" />
+                </span>
+                <span>
+                {T.translate(`${PREFIX}.bigquery`, {count: this.state.bigQueryList.length})}
+                </span>
+              </div>
+              {this.renderBigQueryDetail()}
+            </ExpandableMenu>
+          </If>
         </div>
 
         <AddConnection
           onAdd={this.fetchConnectionsList}
+          validConnectionTypes={this.state.connectionTypes}
         />
       </div>
     );
@@ -682,6 +726,7 @@ export default class DataPrepConnections extends Component {
       </Switch>
     );
   }
+
   showNonRoutableContents() {
     if (this.state.showUpload) {
       return (
@@ -734,6 +779,19 @@ export default class DataPrepConnections extends Component {
       />
     );
   }
+
+  renderContent = () => {
+    if (isNilOrEmpty(this.state.defaultConnection)) {
+      return (
+        <h2> No default connection exists</h2>
+      );
+    }
+    if (this.props.enableRouting && !this.props.singleWorkspaceMode) {
+      return this.renderRoutes();
+    }
+    return this.showNonRoutableContents()
+  };
+
   render() {
     let pageTitle = (
       <Helmet
@@ -779,10 +837,7 @@ export default class DataPrepConnections extends Component {
           'expanded': !this.state.sidePanelExpanded
         })}>
           {
-            this.props.enableRouting && !this.props.singleWorkspaceMode ?
-              this.renderRoutes()
-            :
-              this.showNonRoutableContents()
+            this.renderContent()
           }
         </div>
 
