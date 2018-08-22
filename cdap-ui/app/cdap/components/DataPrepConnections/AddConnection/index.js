@@ -25,7 +25,8 @@ import S3Connection from 'components/DataPrepConnections/S3Connection';
 import GCSConnection from 'components/DataPrepConnections/GCSConnection';
 import BigQueryConnection from 'components/DataPrepConnections/BigQueryConnection';
 import T from 'i18n-react';
-
+import find from 'lodash/find';
+import {ConnectionType} from 'components/DataPrepConnections/ConnectionType';
 require('./AddConnection.scss');
 
 const PREFIX = 'features.DataPrepConnections.AddConnections';
@@ -41,27 +42,32 @@ export default class AddConnection extends Component {
 
     this.CONNECTIONS_TYPE = [
       {
-        type: 'Database',
+        type: ConnectionType.DATABASE,
+        label: 'Database',
         icon: 'icon-database',
         component: DatabaseConnection
       },
       {
-        type: 'Kafka',
+        type: ConnectionType.KAFKA,
+        label: 'Kafka',
         icon: 'icon-kafka',
         component: KafkaConnection
       },
       {
-        type: 'S3',
+        type: ConnectionType.S3,
+        label: 'S3',
         icon: 'icon-s3',
         component: S3Connection
       },
       {
-        type: 'Google Cloud Storage',
+        type: ConnectionType.GCS,
+        label: 'Google Cloud Storage',
         icon: 'icon-storage',
         component: GCSConnection
       },
       {
-        type: 'Google BigQuery',
+        type: ConnectionType.BIGQUERY,
+        label: 'Google BigQuery',
         icon: 'icon-bigquery',
         component: BigQueryConnection
       }
@@ -101,6 +107,7 @@ export default class AddConnection extends Component {
         </span>
       </button>
     );
+    
     return (
       <Popover
         placement="top"
@@ -115,9 +122,12 @@ export default class AddConnection extends Component {
         <div className="popover-body">
           {
             this.CONNECTIONS_TYPE.map((connection) => {
+              if (!find(this.props.validConnectionTypes, {type: connection.type})) {
+                return null;
+              }
               return (
                 <div
-                  key={connection.type}
+                  key={connection.label}
                   className="connection-type-option"
                   onClick={this.connectionClickHandler.bind(this, connection.component)}
                 >
@@ -126,7 +136,7 @@ export default class AddConnection extends Component {
                   </span>
 
                   <span className="connection-name">
-                    {connection.type}
+                    {connection.label}
                   </span>
                 </div>
               );
@@ -148,6 +158,7 @@ export default class AddConnection extends Component {
 }
 
 AddConnection.propTypes = {
-  onAdd: PropTypes.func
+  onAdd: PropTypes.func,
+  validConnectionTypes: PropTypes.arrayOf(PropTypes.object)
 };
 
