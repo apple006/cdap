@@ -219,7 +219,7 @@ export default class BigQueryConnection extends Component {
           loading={this.state.testConnectionLoading}
           label={T.translate(`${PREFIX}.testConnection`)}
           darker={true}
-        / >
+        />
       </span>
     );
   };

@@ -14,8 +14,8 @@
  * the License.
  */
 
-@button-border-color: #999999;
-@header-color: #464a57;
+@import (less) "./variables.less";
+@header-color: @modal-header-color;
 @modal-spacing: 10px;
 
 .cdap-modal.modal-dialog {
@@ -83,9 +83,5 @@
       }
     }
 
-    .disabled-btn:hover {
-      background-color: white;
-      color: inherit;
-    }
   }
 }

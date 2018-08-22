@@ -22,6 +22,7 @@ import CardActionFeedback from 'components/CardActionFeedback';
 import IconSVG from 'components/IconSVG';
 import Mousetrap from 'mousetrap';
 import T from 'i18n-react';
+import If from 'components/If';
 
 require('./ConfirmationModal.scss');
 
@@ -143,17 +144,14 @@ export default class ConfirmationModal extends Component {
       >
         <ModalHeader>
           {this.props.headerTitle}
-          {
-            this.props.closeable ?
-              <div
-                className="close-section float-xs-right"
-                onClick={this.props.cancelFn}
-              >
-                <span className="fa fa-times" />
-              </div>
-            :
-              null
-          }
+          <If condition={this.props.closeable}>
+            <div
+              className="close-section float-xs-right"
+              onClick={this.props.cancelFn}
+            >
+              <span className="fa fa-times" />
+            </div>
+          </If>
         </ModalHeader>
 
         {this.renderModalBody()}

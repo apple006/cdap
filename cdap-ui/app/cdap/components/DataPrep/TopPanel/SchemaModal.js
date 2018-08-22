@@ -32,6 +32,7 @@ import {directiveRequestBodyCreator} from 'components/DataPrep/helper';
 import {execute} from 'components/DataPrep/store/DataPrepActionCreator';
 import DataPrepActions from 'components/DataPrep/store/DataPrepActions';
 import CardActionFeedback from 'components/CardActionFeedback';
+import If from 'components/If';
 
 var SchemaEditor = Loadable({
   loader: () => import(/* webpackChunkName: "SchemaEditor" */ 'components/SchemaEditor'),
@@ -235,16 +236,13 @@ export default class SchemaModal extends Component {
         <ModalBody>
           {content}
         </ModalBody>
-        {
-          this.state.error ?
-            <CardActionFeedback
-              type="DANGER"
-              message={typeof this.state.error === 'object' ? this.state.error.message : this.state.error}
-              extendedMessage={this.props.extendedMessage}
-            />
-          :
-            null
-        }
+        <If condition={this.state.error}>
+          <CardActionFeedback
+            type="DANGER"
+            message={typeof this.state.error === 'object' ? this.state.error.message : this.state.error}
+            extendedMessage={this.props.extendedMessage}
+          />
+        </If>
       </Modal>
     );
   }
