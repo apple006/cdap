@@ -665,6 +665,7 @@ features:
           pipe: Pipe
           tab: Tab
           whitespace: Whitespace
+      failedApplyDirectiveMessage: Failed to apply directive. Please modify input and try again #temporary fallback until backend sends non-null error
       FillNullOrEmpty:
         title: Fill null or empty cells
       Filter:
