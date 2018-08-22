@@ -99,11 +99,22 @@ public final class Schema implements Serializable {
    *
    */
   public enum LogicalType {
-    DATE,
-    TIMESTAMP_MILLIS,
-    TIMESTAMP_MICROS,
-    TIME_MILLIS,
-    TIME_MICROS
+    DATE(Type.INT),
+    TIMESTAMP_MILLIS(Type.LONG),
+    TIMESTAMP_MICROS(Type.LONG),
+    TIME_MILLIS(Type.INT),
+    TIME_MICROS(Type.LONG);
+
+    private final Type type;
+
+    /**
+     * Creates {@link LogicalType} with underlying primitive type.
+     *
+     * @param type primitive type on which this {@link LogicalType} relies on
+     */
+    LogicalType(Type type) {
+      this.type = type;
+    }
   }
 
   /**
@@ -239,28 +250,7 @@ public final class Schema implements Serializable {
    * @return A {@link Schema} with the given logical type.
    */
   public static Schema of(LogicalType logicalType) {
-    Type type;
-    switch (logicalType) {
-      case DATE:
-        type = Type.INT;
-        break;
-      case TIMESTAMP_MILLIS:
-        type = Type.LONG;
-        break;
-      case TIMESTAMP_MICROS:
-        type = Type.LONG;
-        break;
-      case TIME_MILLIS:
-        type = Type.INT;
-        break;
-      case TIME_MICROS:
-        type = Type.LONG;
-        break;
-      default:
-        throw new IllegalStateException("LogicalType " + logicalType + " is not a supported logical type.");
-    }
-
-    return new Schema(type, logicalType, null, null, null, null, null, null, null);
+    return new Schema(logicalType.type, logicalType, null, null, null, null, null, null, null);
   }
 
   /**
