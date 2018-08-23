@@ -29,7 +29,7 @@ const setBigQueryAsActiveBrowser = (payload) => {
     Detailed version:
 
     Scenario that warranted this change.
-    1. User goes to /connections/browser
+    1. User goes to /connections
     2. Clicks on a big query connection by clicking on the left panel
     3. The datasetList will be empty and we go and fetch the list of datasets from bigquery
     4. User clicks on a dataset

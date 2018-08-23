@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import IconSVG from 'components/IconSVG';
@@ -29,7 +28,7 @@ import {
   listBigQueryTables,
   reset as resetDataPrepBrowserStore
 } from 'components/DataPrep/DataPrepBrowser/DataPrepBrowserStore/ActionCreator';
-import {Route, Redirect, Switch} from 'react-router-dom';
+import {Route, Switch} from 'react-router-dom';
 import {getCurrentNamespace} from 'services/NamespaceStore';
 import T from 'i18n-react';
 import LoadingSVG from 'components/LoadingSVG';
@@ -41,7 +40,7 @@ import isNil from 'lodash/isNil';
 import ExpandableMenu from 'components/UncontrolledComponents/ExpandableMenu';
 import ConnectionPopover from 'components/DataPrepConnections/ConnectionPopover';
 import DataPrepStore from 'components/DataPrep/store';
-import {objectQuery, preventPropagation, isNilOrEmpty} from 'services/helpers';
+import {objectQuery, preventPropagation} from 'services/helpers';
 import Helmet from 'react-helmet';
 import LoadingSVGCentered from 'components/LoadingSVGCentered';
 import queryString from 'query-string';
@@ -51,18 +50,11 @@ import NavLinkWrapper from 'components/NavLinkWrapper';
 import {ConnectionType} from 'components/DataPrepConnections/ConnectionType';
 import find from 'lodash/find';
 import If from 'components/If';
+import NoDefaultConnection from 'components/DataPrepConnections/NoDefaultConnection';
 
 require('./DataPrepConnections.scss');
 const PREFIX = 'features.DataPrepConnections';
 const DATAPREP_I18N_PREFIX = 'features.DataPrep.pageTitle';
-
-const RouteToHDFS = () => {
-  let namespace = getCurrentNamespace();
-
-  return (
-    <Redirect to={`/ns/${namespace}/connections/browser`} />
-  );
-};
 
 export default class DataPrepConnections extends Component {
   constructor(props) {
@@ -83,6 +75,7 @@ export default class DataPrepConnections extends Component {
       bigQueryList: [],
       activeConnectionid: objectQuery(workspaceInfo, 'properties', 'connectionid'),
       activeConnectionType: objectQuery(workspaceInfo, 'properties', 'connection'),
+      showAddConnectionPopover: false,
       showUpload: false // FIXME: This is used only when showing with no routing. We can do better.
     };
 
@@ -102,9 +95,11 @@ export default class DataPrepConnections extends Component {
           objectQuery(workspaceInfo, 'properties', 'connectionid') !== this.state.activeConnectionid ||
           objectQuery(workspaceInfo, 'properties', 'id') !== this.state.activeConnectionid
         ) {
+          let activeConnectionid = objectQuery(workspaceInfo, 'properties', 'connectionid') || objectQuery(workspaceInfo, 'properties', 'id');
           this.setState({
-            activeConnectionid: objectQuery(workspaceInfo, 'properties', 'connectionid') || objectQuery(workspaceInfo, 'properties', 'id'),
-            activeConnectionType: objectQuery(workspaceInfo, 'properties', 'connection')
+            activeConnectionid,
+            activeConnectionType: objectQuery(workspaceInfo, 'properties', 'connection'),
+            defaultConnection: activeConnectionid
           });
         }
       });
@@ -253,8 +248,6 @@ export default class DataPrepConnections extends Component {
       let state = {};
       if (action === 'delete' && this.state.activeConnectionid === targetId) {
         state.activeConnectionid = null;
-        state.activeConnectionType = 'file';
-        setActiveBrowser({name: 'file'});
       }
 
       res.values.forEach((connection) => {
@@ -282,6 +275,12 @@ export default class DataPrepConnections extends Component {
       };
 
       this.setState(state);
+    });
+  }
+
+  toggleAddConnectionPopover = (showPopover = false) => {
+    this.setState({
+      showAddConnectionPopover: showPopover
     });
   }
 
@@ -521,7 +520,7 @@ export default class DataPrepConnections extends Component {
           <If condition={find(this.state.connectionTypes, {type: ConnectionType.FILE})}>
             <div className="menu-item">
               <NavLinkWrapper
-                to={`${baseLinkPath}/browser`}
+                to={`${baseLinkPath}/file`}
                 activeClassName="active"
                 onClick={this.handlePropagation.bind(this, {type: 'file'})}
                 isNativeLink={this.props.singleWorkspaceMode}
@@ -611,6 +610,8 @@ export default class DataPrepConnections extends Component {
         <AddConnection
           onAdd={this.fetchConnectionsList}
           validConnectionTypes={this.state.connectionTypes}
+          showPopover={this.state.showAddConnectionPopover}
+          onPopoverClose={this.toggleAddConnectionPopover.bind(this, false)}
         />
       </div>
     );
@@ -621,7 +622,7 @@ export default class DataPrepConnections extends Component {
     return (
       <Switch>
         <Route
-          path={`${BASEPATH}/browser`}
+          path={`${BASEPATH}/file`}
           render={({match, location}) => {
             setActiveBrowser({name: 'file'});
             return (
@@ -722,7 +723,14 @@ export default class DataPrepConnections extends Component {
             );
           }}
         />
-        <Route component={RouteToHDFS} />
+        <Route render={() => {
+          return (
+            <NoDefaultConnection
+              defaultConnection={this.state.defaultConnection}
+              showAddConnectionPopover={this.toggleAddConnectionPopover.bind(this, true)}
+            />
+          );
+        }} />
       </Switch>
     );
   }
@@ -781,15 +789,10 @@ export default class DataPrepConnections extends Component {
   }
 
   renderContent = () => {
-    if (isNilOrEmpty(this.state.defaultConnection)) {
-      return (
-        <h2> No default connection exists</h2>
-      );
-    }
     if (this.props.enableRouting && !this.props.singleWorkspaceMode) {
       return this.renderRoutes();
     }
-    return this.showNonRoutableContents()
+    return this.showNonRoutableContents();
   };
 
   render() {

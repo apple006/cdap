@@ -37,7 +37,7 @@ export default class AddConnection extends Component {
 
     this.state = {
       activeModal: null,
-      showPopover: false
+      showPopover: this.props.showPopover
     };
 
     this.CONNECTIONS_TYPE = [
@@ -74,6 +74,13 @@ export default class AddConnection extends Component {
     ];
   }
 
+  componentWillReceiveProps(nextProps) {
+    if (this.props.showPopover !== nextProps.showPopover) {
+      this.setState({
+        showPopover: nextProps.showPopover
+      });
+    }
+  }
   connectionClickHandler(component) {
     this.setState({
       activeModal: component,
@@ -95,6 +102,12 @@ export default class AddConnection extends Component {
     );
   }
 
+  onPopoverClose = (showPopover) => {
+    if (!showPopover) {
+      this.props.onPopoverClose();
+    }
+  };
+
   renderPopover() {
     const target = () => (
       <button className="btn btn-secondary">
@@ -115,6 +128,7 @@ export default class AddConnection extends Component {
         className="add-connection-popover"
         enableInteractionInPopover={true}
         showPopover={this.state.showPopover}
+        onTogglePopover={this.onPopoverClose}
       >
         <div className="popover-header">
           {T.translate(`${PREFIX}.Popover.title`)}
@@ -157,8 +171,13 @@ export default class AddConnection extends Component {
   }
 }
 
+AddConnection.defaultProps = {
+  showPopover: false
+};
 AddConnection.propTypes = {
   onAdd: PropTypes.func,
-  validConnectionTypes: PropTypes.arrayOf(PropTypes.object)
+  validConnectionTypes: PropTypes.arrayOf(PropTypes.object),
+  showPopover: PropTypes.bool,
+  onPopoverClose: PropTypes.func
 };
 
