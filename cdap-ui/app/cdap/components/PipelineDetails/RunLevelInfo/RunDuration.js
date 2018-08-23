@@ -41,7 +41,7 @@ const RunDuration = ({currentRun}) => {
     } else {
       DurationComp = (
         <Duration
-          targetTime={currentRun.start}
+          targetTime={currentRun.starting}
           isMillisecond={false}
           showFullDuration={true}
         />
@@ -55,7 +55,7 @@ const RunDuration = ({currentRun}) => {
       </div>
       <span>
         {
-          currentRun && currentRun.start ?
+          currentRun && currentRun.starting ?
             DurationComp
           :
             '--'
