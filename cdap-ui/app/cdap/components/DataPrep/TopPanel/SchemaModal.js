@@ -26,7 +26,7 @@ import MyDataPrepApi from 'api/dataprep';
 import DataPrepStore from 'components/DataPrep/store';
 import fileDownload from 'js-file-download';
 import NamespaceStore from 'services/NamespaceStore';
-import {objectQuery} from 'services/helpers';
+import {objectQuery, isNilOrEmpty} from 'services/helpers';
 import T from 'i18n-react';
 import {directiveRequestBodyCreator} from 'components/DataPrep/helper';
 import {execute} from 'components/DataPrep/store/DataPrepActionCreator';
@@ -239,7 +239,7 @@ export default class SchemaModal extends Component {
         <If condition={this.state.error}>
           <CardActionFeedback
             type="DANGER"
-            message={typeof this.state.error === 'object' ? this.state.error.message : this.state.error}
+            message={!isNilOrEmpty(this.state.error) ? this.state.error.message : this.state.error}
             extendedMessage={this.props.extendedMessage}
           />
         </If>

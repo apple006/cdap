@@ -241,7 +241,9 @@ export default class FilterDirective extends Component {
             target="customConditionTooltip"
             toggle={this.toggleCustomTooltip.bind(this)}
           >
-            <PopoverHeader className="popover-title">{T.translate(`${PREFIX}.customconditiontooltiptitle`)}</PopoverHeader>
+            <PopoverHeader className="popover-title">
+              {T.translate(`${PREFIX}.customconditiontooltiptitle`)}
+            </PopoverHeader>
             <PopoverBody className="popover-content">
               <span>{T.translate(`${PREFIX}.customconditiontooltip`)}</span>
               <a

@@ -137,7 +137,7 @@ export default class ConfirmationModal extends Component {
       <Modal
         isOpen={this.props.isOpen}
         toggle={this.props.toggleModal}
-        className="confirmation-modal"
+        className="confirmation-modal cdap-modal"
         backdrop='static'
         zIndex={1061}
         keyboard={this.props.keyboard}
@@ -149,7 +149,7 @@ export default class ConfirmationModal extends Component {
               className="close-section float-xs-right"
               onClick={this.props.cancelFn}
             >
-              <span className="fa fa-times" />
+              <IconSVG name="icon-close" />
             </div>
           </If>
         </ModalHeader>
